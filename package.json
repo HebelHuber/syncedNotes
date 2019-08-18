@@ -1,0 +1,91 @@
+{
+	"name": "git-angular",
+	"displayName": "Git Angular",
+	"description": "Extension to help for people who like using the Angular git convention",
+	"publisher": "Jhecht",
+	"qna": "marketplace",
+	"homepage": "https://gitlab.com/jhechtf/git-angular",
+	"version": "0.1.0",
+	"engines": {
+		"vscode": "^1.37.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"repository": {
+		"url": "https://gitlab.com/jhechtf/git-angular.git",
+		"type": "git"
+	},
+	"activationEvents": [
+		"onCommand:gitAngular.commit"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "gitAngular.commit",
+				"title": "GitAngular Commit"
+			}
+		],
+		"configuration": {
+			"title": "Git Angular",
+			"properties": {
+				"gitAngular.allowNewTypes": {
+					"title": "Allow New Types",
+					"description": "Allow new types to be typed in during commit process",
+					"type": "boolean",
+					"scope": "resource",
+					"default": false
+				},
+				"gitAngular.types": {
+					"title": "Types",
+					"type": "array",
+					"description": "Main type of the commit (fix, feature, test, etc)",
+					"scope": "resource",
+					"default": [
+						"build",
+						"ci",
+						"docs",
+						"feat",
+						"fix",
+						"perf",
+						"test",
+						"style"
+					]
+				},
+				"gitAngular.allowNewScopes": {
+					"title": "Allow New Scopes",
+					"description": "Allows new scopes to be typed in during commit process",
+					"type": "boolean",
+					"default": true
+				},
+				"gitAngular.scopes": {
+					"title": "Scopes",
+					"scope": "resource",
+					"type": "array",
+					"default": [
+						"root"
+					]
+				}
+			}
+		}
+	},
+	"scripts": {
+		"lint": "eslint --ext ts src/**/*",
+		"lint-fix": "eslint --ext ts --fix src/**/*",
+		"vscode:prepublish": "yarn run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"test": "yarn run compile && node ./node_modules/vscode/bin/test"
+	},
+	"devDependencies": {
+		"@types/mocha": "^2.2.42",
+		"@types/node": "^10.12.21",
+		"@typescript-eslint/eslint-plugin": "^2.0.0",
+		"@typescript-eslint/parser": "^2.0.0",
+		"eslint": "^6.1.0",
+		"typescript": "^3.3.1",
+		"vscode": "^1.1.28"
+	}
+}
