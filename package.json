@@ -5,7 +5,7 @@
 	"publisher": "Jhecht",
 	"qna": "marketplace",
 	"homepage": "https://gitlab.com/jhechtf/git-angular",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"engines": {
 		"vscode": "^1.37.0"
 	},
@@ -39,19 +39,20 @@
 				},
 				"gitAngular.types": {
 					"title": "Types",
-					"type": "array",
+					"type": "object",
 					"description": "Main type of the commit (fix, feature, test, etc)",
 					"scope": "resource",
-					"default": [
-						"build",
-						"ci",
-						"docs",
-						"feat",
-						"fix",
-						"perf",
-						"test",
-						"style"
-					]
+					"default": {
+						"build": "Changes that affect the build system or external dependencies",
+						"ci": "Changes to CI configuration files and scripts",
+						"docs": "Documentation only changes",
+						"feat": "A new feature",
+						"fix": "A bug fix",
+						"perf": "A code change that improves performance",
+						"style": "Changes that do not affect the meaning of the code (white space, formatting, missing, semi-colons, etc)",
+						"test": "Adding missing tests / correcting existing tests",
+						"[New]": "Add a new commit type"
+					}
 				},
 				"gitAngular.allowNewScopes": {
 					"title": "Allow New Scopes",
@@ -77,7 +78,8 @@
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
 		"postinstall": "node ./node_modules/vscode/bin/install",
-		"test": "yarn run compile && node ./node_modules/vscode/bin/test"
+		"test": "yarn run compile && node ./node_modules/vscode/bin/test",
+		"release": "standard-version"
 	},
 	"devDependencies": {
 		"@types/mocha": "^2.2.42",
@@ -85,6 +87,7 @@
 		"@typescript-eslint/eslint-plugin": "^2.0.0",
 		"@typescript-eslint/parser": "^2.0.0",
 		"eslint": "^6.1.0",
+		"standard-version": "^7.0.0",
 		"typescript": "^3.3.1",
 		"vscode": "^1.1.28"
 	}
