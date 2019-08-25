@@ -19,10 +19,11 @@ Test:
 Deploy:
   script:
     - apk update && apk add git
-    - git branch
     - git config user.email $GITLAB_USER_EMAIL
     - git config user.name $GITLAB_USER_NAME
     - yarn release
+    - CUR_HEAD=$(git rev-parse HEAD)
+    - git checkout master && git merge $CUR_HEAD
     - git push --follow-tags origin master
     - vsce publish -p $PAT
 
