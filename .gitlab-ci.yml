@@ -1,0 +1,30 @@
+image: node:12-alpine
+stages:
+  - test
+  - deploy
+
+before_script:
+  - yarn global add vsce
+  - yarn
+
+Test:
+  stage: test
+  # this will be changed once I get the tests up and running
+  allow_failure: true
+  script:
+    - yarn test
+  only:
+    - master
+
+Deploy:
+  script:
+    - apk update && apk add git
+    - git config user.email $GITLAB_USER_EMAIL
+    - git config user.name $GITLAB_USER_NAME
+    - yarn release
+    - git push --follow-tags origin master
+    - vsce publish -p $PAT
+
+  only:
+    - master
+  when: manual
