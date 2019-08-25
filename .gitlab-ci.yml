@@ -18,8 +18,8 @@ Test:
 
 Deploy:
   script:
-    - git branch
     - apk update && apk add git
+    - git branch
     - git config user.email $GITLAB_USER_EMAIL
     - git config user.name $GITLAB_USER_NAME
     - yarn release
