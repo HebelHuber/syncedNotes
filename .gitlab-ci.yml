@@ -15,7 +15,7 @@ Deploy:
     - yarn release
     - CUR_HEAD=$(git rev-parse HEAD)
     - git checkout master && git merge $CUR_HEAD
-    - git push --follow-tags https://${GITLAB_USER_LOGIN}:${GL_PAT}@${CI_PROJECT_URL} origin master
+    - git push --follow-tags https://${GITLAB_USER_LOGIN}:${GL_PAT}@gitlab.com/jhechtf/git-angular.git origin master
     - vsce publish -p $PAT
 
   only:
