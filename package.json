@@ -79,7 +79,7 @@
 		"watch": "tsc -watch -p ./",
 		"pretest": "yarn compile",
 		"test": "node ./out/test/index.js",
-		"release": "standard-version && vsce publish"
+		"release": "standard-version"
 	},
 	"devDependencies": {
 		"@types/node": "^10.12.21",
