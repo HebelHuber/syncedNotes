@@ -5,7 +5,7 @@
 	"publisher": "Jhecht",
 	"qna": "marketplace",
 	"homepage": "https://gitlab.com/jhechtf/git-angular",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"engines": {
 		"vscode": "^1.37.0"
 	},
@@ -79,7 +79,7 @@
 		"watch": "tsc -watch -p ./",
 		"pretest": "yarn compile",
 		"test": "node ./out/test/index.js",
-		"release": "standard-version"
+		"release": "standard-version && vsce publish"
 	},
 	"devDependencies": {
 		"@types/node": "^10.12.21",
