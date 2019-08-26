@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.3](https://gitlab.com/jhechtf/git-angular/compare/v0.2.2...v0.2.3) (2019-08-26)
+
+
+### Bug Fixes
+
+* **CI:** fixes compile error breaking deployments. ([d9b00d3](https://gitlab.com/jhechtf/git-angular/commit/d9b00d3))
+
 ### [0.2.2](https://gitlab.com/jhechtf/git-angular/compare/v0.2.1...v0.2.2) (2019-08-26)
 
 ### [0.2.1](https://gitlab.com/jhechtf/git-angular/compare/v0.2.0...v0.2.1) (2019-08-26)
