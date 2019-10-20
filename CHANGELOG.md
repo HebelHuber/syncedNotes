@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.4](https://gitlab.com/jhechtf/git-angular/compare/v0.2.3...v0.2.4) (2019-10-20)
+
+
+### Bug Fixes
+
+* **Types:** Fixed bug not stopping command execution when no type is set ([13dd123](https://gitlab.com/jhechtf/git-angular/commit/13dd123)), closes [#4](https://gitlab.com/jhechtf/git-angular/issues/4)
+* **Types:** Fixed bug not stopping command execution when no type is set ([fc4bce1](https://gitlab.com/jhechtf/git-angular/commit/fc4bce1)), closes [#4](https://gitlab.com/jhechtf/git-angular/issues/4)
+
 ### [0.2.3](https://gitlab.com/jhechtf/git-angular/compare/v0.2.2...v0.2.3) (2019-08-26)
 
 
