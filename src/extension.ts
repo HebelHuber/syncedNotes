@@ -2,11 +2,12 @@ import { extensions, ExtensionContext, workspace, commands, window} from 'vscode
 import { GitExtension, Repository } from './git';
 import { TypeObject } from './def';
 
-export function activate(context: ExtensionContext) {
+export function activate(context: ExtensionContext): null | undefined {
 	// This function relies on the vscode git extension.
+	// eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
 	const git = extensions.getExtension<GitExtension>('vscode.git')!.exports;
 	// If git is not enabled, this will not work
-	if(!git.enabled) { 
+	if(!git.enabled) {
 		window.showErrorMessage("Git is not enabled in this Workspace. Git Angular will not work.",{
 			modal: true
 		});
@@ -18,7 +19,7 @@ export function activate(context: ExtensionContext) {
 	if(gitApi.repositories.length == 0) return window.showErrorMessage('Not a git repository', {modal:true}), null;
 	// get configuration
 	let config = workspace.getConfiguration('gitAngular');
-	let disposable = commands.registerCommand('gitAngular.commit', async () => {
+	const disposable = commands.registerCommand('gitAngular.commit', async () => {
 		// Alright, let's see what we got.
 		const types = config.get('types') as TypeObject,
 					scopes = config.get('scopes') as string[],
@@ -33,40 +34,47 @@ export function activate(context: ExtensionContext) {
 				detail: value
 			};
 		})).then(r=> r == undefined ? {label: '', detail: ''} : r);
+		if(type.label == '[New]' && allowNewTypes) type = await window.showInputBox({ placeHolder: 'Enter new commit type' }).then(str => ({ label: str || '', detail: '' }));
+		else if (type.label === '' && !allowNewTypes) return null;
 
-		if(type == undefined && allowNewTypes) type = await window.showInputBox({placeHolder: 'Enter new commit type'}).then(str => ({ label: str || '', detail: '' }));
-		else if (type == undefined && !allowNewTypes) return null;
+		// If our label hasn't been set yet, then we stop now.
+		if(type.label === '') return null;
 		// Next step: the scope. It follows basically the same steps, but I'm just trying to get this to work for right now.
 		if(allowNewScopes && scopes[scopes.length - 1] != '[New]') scopes.push('[New]');
 		else if (!allowNewScopes && scopes[scopes.length] == '[New]') scopes.pop();
+
 		// get the scope.
 		let scope = await window.showQuickPick(scopes, {
 			placeHolder: 'Scope'
 		});
+
 		if(allowNewScopes && scope == '[New]') scope = await window.showInputBox({
 			prompt: 'Please enter a scope for this commit'
 		});
+
 		// get the subject message
-		let message = await window.showInputBox({
+		const message = await window.showInputBox({
 			prompt: 'Commit Subject'
 		});
 		// we gotta declare this outside of the loop
-		let repo : Repository | null = null;
+		let repo: Repository | null = null;
+
 		// If we have more than one repo in this workspace
 		if(gitApi.repositories.length > 1) {
+			// Which repo do you want to add this commit to?
 			repo = await window.showQuickPick(gitApi.repositories.map((repo, index) => {
 				return {
 					label: repo.rootUri.path,
-					v: 'Hi',
 					index: index
 				}
-			}), {placeHolder: 'Please choose the repo this commit is for'}).then(r=> {
+			}), {placeHolder: 'Please choose the repo this commit is for'}).then(r => {
 				if(!r) return gitApi.repositories[0];
 				return gitApi.repositories[r.index]
 			});
 		} else repo = gitApi.repositories[0];
+
 		// Build the full message
-		const fullMsg = `${type.label}${scope ? '('+scope+')': ''}: ${message}\n\n`;
+		const fullMsg = `${type.label}${scope ? '('+scope+')': ''}: ${message}`;
 		// set the inputbox value of our repo to the full message
 		repo.inputBox.value = fullMsg;
 		// show the SCM
@@ -83,7 +91,7 @@ export function activate(context: ExtensionContext) {
 		}
 	});
 	// add in a subscription to workspace config changes
-	context.subscriptions.push(workspace.onDidChangeConfiguration( e=> {
+	context.subscriptions.push(workspace.onDidChangeConfiguration( e => {
 		if(e.affectsConfiguration('gitAngular') ) {
 			config = workspace.getConfiguration('gitAngular');
 		}
@@ -93,4 +101,4 @@ export function activate(context: ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate(): void {}
