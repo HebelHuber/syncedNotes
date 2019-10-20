@@ -7,7 +7,13 @@ before_script:
   - yarn global add vsce
   - yarn
 
+Lint:
+  stage: test
+  script:
+    - yarn lint
+
 Deploy:
+  stage: deploy
   script:
     - apk update && apk add git
     - git config user.email $GITLAB_USER_EMAIL
