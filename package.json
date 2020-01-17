@@ -7,7 +7,7 @@
 	"homepage": "https://gitlab.com/jhechtf/git-angular",
 	"version": "0.2.4",
 	"engines": {
-		"vscode": "^1.37.0"
+		"vscode": "^1.41.0"
 	},
 	"categories": [
 		"Other"
@@ -72,23 +72,25 @@
 		}
 	},
 	"scripts": {
-		"lint": "eslint --ext ts src/**/*",
-		"lint-fix": "eslint --ext ts --fix src/**/*",
 		"vscode:prepublish": "yarn run compile",
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
-		"pretest": "yarn compile",
-		"test": "node ./out/test/index.js",
+		"pretest": "yarn run compile",
+		"test": "node ./out/test/runTest.js",
 		"release": "standard-version"
 	},
 	"devDependencies": {
-		"@types/node": "^10.12.21",
-		"@types/vscode": "^1.37.0",
-		"@typescript-eslint/eslint-plugin": "^2.0.0",
-		"@typescript-eslint/parser": "^2.0.0",
-		"eslint": "^6.1.0",
-		"standard-version": "^7.0.0",
-		"typescript": "^3.3.1",
-		"vscode-test": "^1.2.0"
+		"@types/glob": "^7.1.1",
+		"@types/mocha": "^5.2.7",
+		"@types/node": "^12.11.7",
+		"@types/vscode": "^1.41.0",
+		"@typescript-eslint/eslint-plugin": "^2.16.0",
+		"@typescript-eslint/parser": "^2.16.0",
+		"eslint": "^6.8.0",
+		"glob": "^7.1.5",
+		"mocha": "^6.2.2",
+		"standard-version": "^7.0.1",
+		"typescript": "^3.6.4",
+		"vscode-test": "^1.2.2"
 	}
 }
