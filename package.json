@@ -77,6 +77,7 @@
 		"watch": "tsc -watch -p ./",
 		"pretest": "yarn run compile",
 		"test": "node ./out/test/runTest.js",
+		"lint": "eslint src/*",
 		"release": "standard-version"
 	},
 	"devDependencies": {
