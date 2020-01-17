@@ -8,7 +8,6 @@ export function activate(context: ExtensionContext): null | undefined {
 	const git = extensions.getExtension<GitExtension>('vscode.git')!.exports;
 	// If git is not enabled, this will not work
 	if (!git.enabled) {
-		debugger
 		window.showErrorMessage("Git is not enabled in this Workspace. Git Angular will not work.", {
 			modal: true
 		});
@@ -22,12 +21,17 @@ export function activate(context: ExtensionContext): null | undefined {
 	let config = workspace.getConfiguration('gitAngular');
 	const disposable = commands.registerCommand('gitAngular.commit', async () => {
 		// Alright, let's see what we got.
-		const types = config.get('types') as TypeObject,
-			scopes = config.get('scopes') as string[],
+		let types = config.get('types') as TypeObject
+		const scopes = config.get('scopes') as string[],
 			allowNewTypes = config.get('allowNewTypes') as boolean,
 			allowNewScopes = config.get('allowNewScopes') as boolean;
 
-		if (!allowNewTypes) delete types['[New]'];
+		// This has to be done because apparently config objects are not meant to be edited directly, and was throwing an error. 
+		// Please see https://gitlab.com/jhechtf/git-angular/issues/6 for the error this fixes.
+		if (!allowNewTypes && types) {
+			types = { ...types }
+			delete types['[New]'];
+		}
 		// get the type
 		let type = await window.showQuickPick(Object.entries(types).map(([key, value]) => {
 			return {
