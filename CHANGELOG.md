@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://gitlab.com/jhechtf/git-angular/compare/v0.2.4...v1.0.0) (2020-01-17)
+
+
+### Bug Fixes
+
+* Fixed an error preventing the extension from working correctly. ([8230459](https://gitlab.com/jhechtf/git-angular/commit/8230459cc089bfe38892705c7487a3723ea754b6)), closes [#6](https://gitlab.com/jhechtf/git-angular/issues/6)
+
 ### [0.2.4](https://gitlab.com/jhechtf/git-angular/compare/v0.2.3...v0.2.4) (2019-10-20)
 
 
