@@ -57,6 +57,10 @@ export function activate(context: ExtensionContext): null | undefined {
 			prompt: 'Please enter a scope for this commit'
 		});
 
+		// breaking change?
+		const breakingChange = await window.showQuickPick(["No", "Yes"], { placeHolder: 'Did you introduce breaking changes?' })
+			.then(r => { return r == "Yes"; });
+
 		// get the subject message
 		const message = await window.showInputBox({
 			prompt: 'Commit Subject'
@@ -79,7 +83,9 @@ export function activate(context: ExtensionContext): null | undefined {
 		} else repo = gitApi.repositories[0];
 
 		// Build the full message
-		const fullMsg = `${type.label}${scope ? '(' + scope + ')' : ''}: ${message}`;
+		const breakingMessage = breakingChange ? `BREAKING CHANGE: ${message}` : `${message}`;
+		const fullMsg = `${type.label}${scope ? '(' + scope + ')' : ''}: ${breakingMessage}`;
+
 		// set the inputbox value of our repo to the full message
 		repo.inputBox.value = fullMsg;
 		// show the SCM
