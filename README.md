@@ -34,7 +34,7 @@ The extension only provides one command `gitAngular.commit`, but does not contri
 
 ## Bugs / Requests
 
-You can find the issues for this extension at https://gitlab.com/jhechtf/git-angular/issues
+You can find the issues for this extension at https://github.com/HebelHuber/git-angular/issues
 
 ## Notes
 
