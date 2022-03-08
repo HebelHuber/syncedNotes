@@ -2,9 +2,9 @@
 	"name": "git-angular",
 	"displayName": "Git Angular",
 	"description": "Extension to help for people who like using the Angular git convention",
-	"publisher": "Jhecht",
+	"publisher": "HHuber",
 	"qna": "marketplace",
-	"homepage": "https://gitlab.com/jhechtf/git-angular",
+	"homepage": "https://github.com/HebelHuber/git-angular",
 	"version": "1.0.0",
 	"engines": {
 		"vscode": "^1.41.0"
@@ -13,7 +13,7 @@
 		"Other"
 	],
 	"repository": {
-		"url": "https://gitlab.com/jhechtf/git-angular.git",
+		"url": "https://github.com/HebelHuber/git-angular.git",
 		"type": "git"
 	},
 	"activationEvents": [
@@ -91,7 +91,7 @@
 		"glob": "^7.1.5",
 		"mocha": "^6.2.2",
 		"standard-version": "^7.0.1",
-		"typescript": "^3.6.4",
+		"typescript": "^3.7.5",
 		"vscode-test": "^1.2.2"
 	}
 }
