@@ -5,7 +5,7 @@
 	"publisher": "HebelHuber",
 	"qna": "marketplace",
 	"homepage": "https://github.com/HebelHuber/git-angular",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"engines": {
 		"vscode": "^1.41.0"
 	},
