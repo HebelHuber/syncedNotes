@@ -126,13 +126,13 @@ export interface Repository {
 	readonly state: RepositoryState;
 	readonly ui: RepositoryUIState;
 
-	getConfigs(): Promise<{ key: string; value: string; }[]>;
+	getConfigs(): Promise<{ key: string; value: string }[]>;
 	getConfig(key: string): Promise<string>;
 	setConfig(key: string, value: string): Promise<string>;
 	getGlobalConfig(key: string): Promise<string>;
 
-	getObjectDetails(treeish: string, path: string): Promise<{ mode: string, object: string, size: number }>;
-	detectObjectType(object: string): Promise<{ mimetype: string, encoding?: string }>;
+	getObjectDetails(treeish: string, path: string): Promise<{ mode: string; object: string; size: number }>;
+	detectObjectType(object: string): Promise<{ mimetype: string; encoding?: string }>;
 	buffer(ref: string, path: string): Promise<Buffer>;
 	show(ref: string, path: string): Promise<string>;
 	getCommit(ref: string): Promise<Commit>;
