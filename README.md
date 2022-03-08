@@ -1,8 +1,13 @@
 # Git Angular
 
-Forked from Jim Burbridge's [Git Angular](https://gitlab.com/jhechtf/git-angular)
+Git Angular is an extension to help you use [Angular style commit messages](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-format) in your projects.
 
-Git Angular is an extension to help you use [Angular style commit messages](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-format) in your projects. I occasionally had issue trying to remember some of the options, so I created this largely for myself, but if anyone else wants to use, the more the merrier.
+Forked from Jim Burbridge's [Git Angular](https://gitlab.com/jhechtf/git-angular).  
+The only change to the original version is that it implements an interface for the `BREAKING CHANGE:` note.
+
+## How to use
+
+Run command `gitAngular.commit` and follow the prompts.
 
 ## Features
 
