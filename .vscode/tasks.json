@@ -15,6 +15,41 @@
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+		{
+			"type": "shell",
+			"command": "./node_modules/.bin/vsce login HebelHuber",
+			"label": "vsce login",
+		},
+		{
+			"type": "shell",
+			"command": "./node_modules/.bin/vsce package",
+			"label": "vsce package",
+		},
+		{
+			"type": "shell",
+			"command": "./node_modules/.bin/vsce publish",
+			"label": "vsce publish",
+		},
+		{
+			"type": "shell",
+			"command": "./node_modules/.bin/vsce publish major",
+			"label": "vsce publish major",
+		},
+		{
+			"type": "shell",
+			"command": "./node_modules/.bin/vsce publish minor",
+			"label": "vsce publish minor",
+		},
+		{
+			"type": "shell",
+			"command": "./node_modules/.bin/vsce publish patch",
+			"label": "vsce publish patch",
+		},
+		{
+			"type": "shell",
+			"command": "./node_modules/.bin/vsce unpublish",
+			"label": "vsce unpublish HebelHuber.git-angular-commits",
 		}
 	]
 }

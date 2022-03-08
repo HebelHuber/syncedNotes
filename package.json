@@ -1,6 +1,6 @@
 {
-	"name": "git-angular",
-	"displayName": "Git Angular",
+	"name": "git-angular-commits",
+	"displayName": "Git Angular Commits",
 	"description": "Extension to help for people who like using the Angular git convention",
 	"publisher": "HebelHuber",
 	"qna": "marketplace",
@@ -78,7 +78,8 @@
 		"pretest": "yarn run compile",
 		"test": "node ./out/test/runTest.js",
 		"lint": "eslint --ext ts src/**/*",
-		"release": "standard-version"
+		"release": "standard-version",
+		"test:login": "./node_modules/.bin/vsce login HebelHuber"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
