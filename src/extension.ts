@@ -88,8 +88,14 @@ export function activate(context: ExtensionContext): null | undefined {
 
 		// set the inputbox value of our repo to the full message
 		repo.inputBox.value = fullMsg;
+
+		// commit right away?
+		const commitNow = await window.showQuickPick(["No", "Yes"], { placeHolder: 'Commit now??' })
+			.then(r => { return r == "Yes"; });
+
 		// show the SCM
 		commands.executeCommand('workbench.view.scm', repo.rootUri);
+
 		// If we are allowing new scopes and types, then here is where we save those to the settings
 		if (allowNewScopes || allowNewTypes) {
 			if (type && types[type.label] == '') {
