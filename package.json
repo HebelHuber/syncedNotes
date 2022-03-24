@@ -1,75 +1,114 @@
 {
-	"name": "git-angular-commits",
-	"displayName": "Git Angular Commits",
-	"description": "Extension to help for people who like using the Angular git convention",
+	"name": "vscode-notes",
+	"displayName": "Synced Notes",
+	"description": "Extension to edit, view and sync notes in vscode",
 	"publisher": "HebelHuber",
 	"qna": "marketplace",
-	"homepage": "https://github.com/HebelHuber/git-angular",
-	"version": "1.0.3",
+	"homepage": "https://github.com/HebelHuber/git-angular/tree/Notes-Sync",
+	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.41.0"
 	},
 	"categories": [
 		"Other"
 	],
+	"license": "MIT",
 	"repository": {
-		"url": "https://github.com/HebelHuber/git-angular.git",
+		"url": "https://github.com/HebelHuber/git-angular/tree/Notes-Sync.git",
 		"type": "git"
 	},
 	"activationEvents": [
-		"onCommand:gitAngular.commit"
+		"onView:syncedNotes-container"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "syncednotes-container",
+					"title": "Synced Notes",
+					"icon": "./resources/syncednotes.svg"
+				}
+			]
+		},
+		"views": {
+			"syncednotes-container": [
+				{
+					"id": "syncednotes-explorer",
+					"name": "Synced Notes",
+					"icon": "./resources/dep.svg"
+				}
+			]
+		},
+		"menus": {
+			"view/title": [
+				{
+					"command": "syncedNotes.refreshEntry",
+					"when": "view == syncednotes-container",
+					"group": "navigation"
+				}
+			],
+			"view": [
+				{
+					"command": "syncedNotes.addFolder",
+					"when": "view == syncednotes-explorer"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "syncedNotes.deleteEntry",
+					"when": "view == syncednotes-explorer"
+				}
+			]
+		},
 		"commands": [
 			{
-				"command": "gitAngular.commit",
-				"title": "GitAngular Commit"
-			}
-		],
-		"configuration": {
-			"title": "Git Angular",
-			"properties": {
-				"gitAngular.allowNewTypes": {
-					"title": "Allow New Types",
-					"description": "Allow new types to be typed in during commit process",
-					"type": "boolean",
-					"scope": "resource",
-					"default": false
-				},
-				"gitAngular.types": {
-					"title": "Types",
-					"type": "object",
-					"description": "Main type of the commit (fix, feature, test, etc)",
-					"scope": "resource",
-					"default": {
-						"build": "Changes that affect the build system or external dependencies",
-						"ci": "Changes to CI configuration files and scripts",
-						"docs": "Documentation only changes",
-						"feat": "A new feature",
-						"fix": "A bug fix",
-						"perf": "A code change that improves performance",
-						"style": "Changes that do not affect the meaning of the code (white space, formatting, missing, semi-colons, etc)",
-						"test": "Adding missing tests / correcting existing tests",
-						"[New]": "Add a new commit type"
-					}
-				},
-				"gitAngular.allowNewScopes": {
-					"title": "Allow New Scopes",
-					"description": "Allows new scopes to be typed in during commit process",
-					"type": "boolean",
-					"default": true
-				},
-				"gitAngular.scopes": {
-					"title": "Scopes",
-					"scope": "resource",
-					"type": "array",
-					"default": [
-						"root"
-					]
+				"command": "syncedNotes.refreshEntry",
+				"title": "Refresh",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
+				}
+			},
+			{
+				"command": "syncedNotes.deleteEntry",
+				"title": "delete",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
 				}
 			}
-		}
+		],
+		"configuration": [
+			{
+				"title": "Synced Notes",
+				"properties": {
+					"syncedNotes.autorefresh": {
+						"type": "boolean",
+						"default": false
+					}
+				}
+			},
+			{
+				"title": "syncedNotes.notes",
+				"order": 2,
+				"type": "object",
+				"properties": {
+					"syncedNotes.notes": {
+						"default": {
+							"folder_A": {
+								"note 1": "IyB0aGlzIGlzIGEgdGVzdCBub3RlCgotIGxvbGxvMQotIGxvbGxvMg==",
+								"note 2": "IyB0aGlzIGlzIGEgdGVzdCBub3RlCgotIGxvbGxvMQotIGxvbGxvMg=="
+							},
+							"folder_B": {
+								"note 3": "IyB0aGlzIGlzIGEgdGVzdCBub3RlCgotIGxvbGxvMQotIGxvbGxvMg==",
+								"note 4": "IyB0aGlzIGlzIGEgdGVzdCBub3RlCgotIGxvbGxvMQotIGxvbGxvMg=="
+							}
+						}
+					}
+				}
+			}
+		]
 	},
 	"scripts": {
 		"vscode:prepublish": "yarn run compile",

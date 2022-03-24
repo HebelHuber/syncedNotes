@@ -7,14 +7,24 @@
 			"type": "npm",
 			"script": "watch",
 			"problemMatcher": "$tsc-watch",
-			"isBackground": true,
+			"isBackground": false,
 			"presentation": {
-				"reveal": "never"
+				"reveal": "silent"
 			},
 			"group": {
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+		{
+			"type": "npm",
+			"script": "compile",
+			"label": "compile",
+			// "problemMatcher": "$tsc-watch",
+			"isBackground": false,
+			"presentation": {
+				"reveal": "silent"
+			},
 		},
 		{
 			"type": "shell",

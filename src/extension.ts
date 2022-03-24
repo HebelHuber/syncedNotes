@@ -1,8 +1,46 @@
-import { extensions, ExtensionContext, workspace, commands, window } from 'vscode';
-import { GitExtension, Repository } from './git';
-import { TypeObject } from './def';
+import * as vscode from 'vscode';
+import { NodeDependenciesProvider } from './NodeDependenciesProvider';
 
-export function activate(context: ExtensionContext): null | undefined {
+
+// this method is called when your extension is activated
+// export function activate(context: ExtensionContext): null | undefined {
+export function activate(context: vscode.ExtensionContext): void {
+
+	//Create output channel
+	const logger = vscode.window.createOutputChannel("synced notes");
+
+	// TODO logger doesn't work
+
+	//Write to output.
+	logger.show();
+	logger.appendLine("I am a banana.");
+
+	const provider = new NodeDependenciesProvider(logger);
+	const treeView = vscode.window.createTreeView('syncednotes-explorer', { treeDataProvider: provider });
+
+	// config.notes
+	// config.autorefresh
+
+	vscode.commands.registerCommand('syncedNotes.refreshEntry', () => provider.refresh());
+
+
+
+	// add in a subscription to workspace config changes
+	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
+		if (e.affectsConfiguration('syncedNotes')) {
+			// config has changed
+		}
+	}));
+
+	// register commands
+	// const disposable = vscode.commands.registerCommand('gitAngular.commit', async () => { });
+	// context.subscriptions.push(disposable);
+
+	// ========================================================================================
+	// ========================================================================================
+	// ========================================================================================
+
+	/*
 	// This function relies on the vscode git extension.
 	// eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
 	const git = extensions.getExtension<GitExtension>('vscode.git')!.exports;
@@ -107,6 +145,7 @@ export function activate(context: ExtensionContext): null | undefined {
 			}
 		}
 	});
+
 	// add in a subscription to workspace config changes
 	context.subscriptions.push(workspace.onDidChangeConfiguration(e => {
 		if (e.affectsConfiguration('gitAngular')) {
@@ -115,6 +154,7 @@ export function activate(context: ExtensionContext): null | undefined {
 	}));
 
 	context.subscriptions.push(disposable);
+	*/
 }
 
 // this method is called when your extension is deactivated
