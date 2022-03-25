@@ -18,21 +18,12 @@
 		"type": "git"
 	},
 	"activationEvents": [
-		"onView:syncedNotes-container"
+		"onView:syncednotes-explorer"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "syncednotes-container",
-					"title": "Synced Notes",
-					"icon": "./resources/syncednotes.svg"
-				}
-			]
-		},
 		"views": {
-			"syncednotes-container": [
+			"explorer": [
 				{
 					"id": "syncednotes-explorer",
 					"name": "Synced Notes",
@@ -40,45 +31,59 @@
 				}
 			]
 		},
+		"commands": [
+			{
+				"command": "syncedNotes.refreshNotes",
+				"title": "refreshNotes",
+				"category": "syncedNotes"
+			},
+			{
+				"command": "syncedNotes.addEntry",
+				"title": "addEntry",
+				"category": "syncedNotes"
+			},
+			{
+				"command": "syncedNotes.deleteEntry",
+				"title": "deleteEntry",
+				"category": "syncedNotes"
+			},
+			{
+				"command": "syncedNotes.addFolder",
+				"title": "addFolder",
+				"category": "syncedNotes"
+			},
+			{
+				"command": "syncedNotes.removeFolder",
+				"title": "removeFolder",
+				"category": "syncedNotes"
+			}
+		],
 		"menus": {
 			"view/title": [
 				{
-					"command": "syncedNotes.refreshEntry",
-					"when": "view == syncednotes-container",
+					"command": "syncedNotes.refreshNotes",
+					"when": "view == syncednotes-explorer",
 					"group": "navigation"
-				}
-			],
-			"view": [
+				},
 				{
 					"command": "syncedNotes.addFolder",
-					"when": "view == syncednotes-explorer"
+					"when": "view == syncednotes-explorer",
+					"group": "navigation"
 				}
 			],
 			"view/item/context": [
 				{
 					"command": "syncedNotes.deleteEntry",
-					"when": "view == syncednotes-explorer"
+					"group": "inline",
+					"when": "view == syncednotes-explorer && viewItem == note"
+				},
+				{
+					"command": "syncedNotes.removeFolder",
+					"group": "inline",
+					"when": "view == syncednotes-explorer && viewItem == folder"
 				}
-			]
-		},
-		"commands": [
-			{
-				"command": "syncedNotes.refreshEntry",
-				"title": "Refresh",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				}
-			},
-			{
-				"command": "syncedNotes.deleteEntry",
-				"title": "delete",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				}
-			}
-		],
+]
+},
 		"configuration": [
 			{
 				"title": "Synced Notes",

@@ -1,163 +1,104 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+
 import * as vscode from 'vscode';
-import { NodeDependenciesProvider } from './NodeDependenciesProvider';
+import { decode, encode } from './utils';
 
 
-// this method is called when your extension is activated
-// export function activate(context: ExtensionContext): null | undefined {
-export function activate(context: vscode.ExtensionContext): void {
+class NoteItem extends vscode.TreeItem {
+    children: NoteItem[] | undefined;
+    content: string | undefined;
 
-	//Create output channel
-	const logger = vscode.window.createOutputChannel("synced notes");
-
-	// TODO logger doesn't work
-
-	//Write to output.
-	logger.show();
-	logger.appendLine("I am a banana.");
-
-	const provider = new NodeDependenciesProvider(logger);
-	const treeView = vscode.window.createTreeView('syncednotes-explorer', { treeDataProvider: provider });
-
-	// config.notes
-	// config.autorefresh
-
-	vscode.commands.registerCommand('syncedNotes.refreshEntry', () => provider.refresh());
-
-
-
-	// add in a subscription to workspace config changes
-	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
-		if (e.affectsConfiguration('syncedNotes')) {
-			// config has changed
-		}
-	}));
-
-	// register commands
-	// const disposable = vscode.commands.registerCommand('gitAngular.commit', async () => { });
-	// context.subscriptions.push(disposable);
-
-	// ========================================================================================
-	// ========================================================================================
-	// ========================================================================================
-
-	/*
-	// This function relies on the vscode git extension.
-	// eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
-	const git = extensions.getExtension<GitExtension>('vscode.git')!.exports;
-	// If git is not enabled, this will not work
-	if (!git.enabled) {
-		window.showErrorMessage("Git is not enabled in this Workspace. Git Angular will not work.", {
-			modal: true
-		});
-		return;
-	}
-	// get the API Object.
-	const gitApi = git.getAPI(1);
-	// If this is not a git repo, show an error message.
-	if (gitApi.repositories.length == 0) return window.showErrorMessage('Not a git repository', { modal: true }), null;
-	// get configuration
-	let config = workspace.getConfiguration('gitAngular');
-	const disposable = commands.registerCommand('gitAngular.commit', async () => {
-		// Alright, let's see what we got.
-		let types = config.get('types') as TypeObject
-		const scopes = config.get('scopes') as string[],
-			allowNewTypes = config.get('allowNewTypes') as boolean,
-			allowNewScopes = config.get('allowNewScopes') as boolean;
-
-		// This has to be done because apparently config objects are not meant to be edited directly, and was throwing an error. 
-		// Please see https://gitlab.com/jhechtf/git-angular/issues/6 for the error this fixes.
-		if (!allowNewTypes && types) {
-			types = { ...types }
-			delete types['[New]'];
-		}
-		// get the type
-		let type = await window.showQuickPick(Object.entries(types).map(([key, value]) => {
-			return {
-				label: key,
-				detail: value
-			};
-		})).then(r => r == undefined ? { label: '', detail: '' } : r);
-		if (type.label == '[New]' && allowNewTypes) type = await window.showInputBox({ placeHolder: 'Enter new commit type' }).then(str => ({ label: str || '', detail: '' }));
-		else if (type.label === '' && !allowNewTypes) return null;
-
-		// If our label hasn't been set yet, then we stop now.
-		if (type.label === '') return null;
-		// Next step: the scope. It follows basically the same steps, but I'm just trying to get this to work for right now.
-		if (allowNewScopes && scopes[scopes.length - 1] != '[New]') scopes.push('[New]');
-		else if (!allowNewScopes && scopes[scopes.length] == '[New]') scopes.pop();
-
-		// get the scope.
-		let scope = await window.showQuickPick(scopes, {
-			placeHolder: 'Scope'
-		});
-
-		if (allowNewScopes && scope == '[New]') scope = await window.showInputBox({
-			prompt: 'Please enter a scope for this commit'
-		});
-
-		// breaking change?
-		const breakingChange = await window.showQuickPick(["No", "Yes"], { placeHolder: 'Did you introduce breaking changes?' })
-			.then(r => { return r == "Yes"; });
-
-		// get the subject message
-		const message = await window.showInputBox({
-			prompt: 'Commit Subject'
-		});
-		// we gotta declare this outside of the loop
-		let repo: Repository | null = null;
-
-		// If we have more than one repo in this workspace
-		if (gitApi.repositories.length > 1) {
-			// Which repo do you want to add this commit to?
-			repo = await window.showQuickPick(gitApi.repositories.map((repo, index) => {
-				return {
-					label: repo.rootUri.path,
-					index: index
-				}
-			}), { placeHolder: 'Please choose the repo this commit is for' }).then(r => {
-				if (!r) return gitApi.repositories[0];
-				return gitApi.repositories[r.index]
-			});
-		} else repo = gitApi.repositories[0];
-
-		// Build the full message
-		const breakingMessage = breakingChange ? `BREAKING CHANGE: ${message}` : `${message}`;
-		const fullMsg = `${type.label}${scope ? '(' + scope + ')' : ''}: ${breakingMessage}`;
-
-		// set the inputbox value of our repo to the full message
-		repo.inputBox.value = fullMsg;
-
-		// commit right away?
-		const commitNow = await window.showQuickPick(["No", "Yes"], { placeHolder: 'Commit now??' })
-			.then(r => { return r == "Yes"; });
-
-		// show the SCM
-		commands.executeCommand('workbench.view.scm', repo.rootUri);
-
-		// If we are allowing new scopes and types, then here is where we save those to the settings
-		if (allowNewScopes || allowNewTypes) {
-			if (type && types[type.label] == '') {
-				await config.update('types', types);
-			}
-			if (scope && scopes.indexOf(scope) == -1) {
-				scopes.splice(scopes.length - 1, 0, scope);
-				await config.update('scopes', scopes.slice(0, -1));
-			}
-		}
-	});
-
-	// add in a subscription to workspace config changes
-	context.subscriptions.push(workspace.onDidChangeConfiguration(e => {
-		if (e.affectsConfiguration('gitAngular')) {
-			config = workspace.getConfiguration('gitAngular');
-		}
-	}));
-
-	context.subscriptions.push(disposable);
-	*/
+    constructor(label: string, content?: string, children?: NoteItem[]) {
+        super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
+        this.children = children;
+        this.content = content;
+        this.contextValue = children === undefined ? 'note' : 'folder';
+    }
 }
 
-// this method is called when your extension is deactivated
-export function deactivate(): void {
-	console.log('deactivate!');
+class TreeDataProvider implements vscode.TreeDataProvider<NoteItem> {
+
+    // onDidChangeTreeData?: vscode.Event<NoteItem | null | undefined> | undefined;
+
+    // private _onDidChangeTreeData: vscode.EventEmitter<NoteItem | undefined | null | void> = new vscode.EventEmitter<NoteItem | undefined | null | void>();
+    // readonly onDidChangeTreeData: vscode.Event<NoteItem | undefined | null> = this._onDidChangeTreeData.event;
+
+    _onDidChangeTreeData: vscode.EventEmitter<NoteItem> = new vscode.EventEmitter<NoteItem>();
+    onDidChangeTreeData: vscode.Event<NoteItem> = this._onDidChangeTreeData.event;
+
+    // refresh(): void {
+    //     this._onDidChangeTreeData.fire();
+    // }
+
+    data: NoteItem[] = [];
+    logger: vscode.OutputChannel;
+
+    constructor(logger: vscode.OutputChannel) {
+        this.logger = logger;
+        this.loadFromConfig();
+    }
+
+    loadFromConfig(): void {
+
+        this.logger.appendLine('Loading from config...');
+
+        const tempArray = new Array<NoteItem>();
+        const config = vscode.workspace.getConfiguration('syncedNotes');
+
+        for (const folderName in config.notes) {
+
+            this.logger.appendLine(`=== ${folderName}`);
+
+            const folderItem = new NoteItem(folderName, "", new Array<NoteItem>());
+            tempArray.push(folderItem);
+
+            Object.entries(config.notes[folderName]).forEach(([noteName, value]) => {
+
+                this.logger.appendLine(`---===> ${noteName}`);
+                const content = decode(value as string);
+                folderItem.children?.push(new NoteItem(noteName, content));
+            });
+        }
+
+        this.data = tempArray;
+    }
+
+    getTreeItem(element: NoteItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
+        return element;
+    }
+
+    getChildren(element?: NoteItem | undefined): vscode.ProviderResult<NoteItem[]> {
+        if (element === undefined) {
+            this.loadFromConfig();
+            return this.data;
+        }
+        return element.children;
+    }
 }
+
+export function activate(context: vscode.ExtensionContext) {
+
+    //Create output channel
+    const logger = vscode.window.createOutputChannel("synced notes");
+    logger.show();
+    logger.appendLine("I am a banana.");
+
+    const provider = new TreeDataProvider(logger)
+
+    // add in a subscription to workspace config changes
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
+        if (e.affectsConfiguration('syncedNotes')) {
+
+            if (!vscode.workspace.getConfiguration('syncedNotes').autorefresh)
+                return;
+
+            // provider.loadFromConfig();
+            provider._onDidChangeTreeData.fire();
+        }
+    }));
+
+    vscode.commands.registerCommand('syncedNotes.refreshNotes', () => provider.loadFromConfig());
+    vscode.window.registerTreeDataProvider('syncednotes-explorer', provider);
+}
+

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { decode } from './utils';
+import { decode } from './.utils';
 import { EventEmitter } from 'vscode';
 
 class Note extends vscode.TreeItem {
