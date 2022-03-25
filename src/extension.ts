@@ -100,5 +100,61 @@ export function activate(context: vscode.ExtensionContext) {
 
     vscode.commands.registerCommand('syncedNotes.refreshNotes', () => provider.loadFromConfig());
     vscode.window.registerTreeDataProvider('syncednotes-explorer', provider);
+
+    // add folder: ask for folder name, compare with existing
+    vscode.commands.registerCommand('syncedNotes.addFolder', async () => {
+
+        const newFolderName = await vscode.window.showInputBox({
+            prompt: 'Please enter a folder for your note'
+        }) as string;
+
+        const config = await vscode.workspace.getConfiguration('syncedNotes');
+        const existingFolders = config.notes;
+
+        if (newFolderName in existingFolders) {
+            vscode.window.showErrorMessage(`Folder ${newFolderName} already exists`);
+            return;
+        }
+
+        const newFolders = {};
+        Object.assign(newFolders, existingFolders, { [newFolderName]: {} });
+
+        await config.update('notes', newFolders, vscode.ConfigurationTarget.Global);
+        provider._onDidChangeTreeData.fire();
+    });
+
+    vscode.commands.registerCommand('syncedNotes.removeFolder', async () => {
+
+        const config = await vscode.workspace.getConfiguration('syncedNotes');
+        const folderNameOptions = Object.entries(config.notes).map(([name, value]) => { return { label: name, description: name } });
+
+        const selectedOption = await vscode.window.showQuickPick(folderNameOptions, {
+            placeHolder: 'Select a folder to delete'
+        });
+
+        if (selectedOption === undefined)
+            return
+
+        const selectedFolderName = selectedOption.label as string;
+
+        // check if folder is empty. If not, show a warning message
+        if (Object.entries(config.notes[selectedFolderName].length > 0)) {
+            const deleteFolder = await vscode.window.showWarningMessage(`Folder ${selectedFolderName} is not empty. Are you sure you want to delete it?`, { modal: true }, 'Yes', 'No');
+            if (deleteFolder === 'No') return;
+        }
+
+        const newFolders = Object.assign({}, ...
+            Object.entries(config.notes).filter(([k, v]) => k !== selectedFolderName).map(([k, v]) => ({ [k]: v }))
+        );
+
+        await config.update('notes', newFolders, vscode.ConfigurationTarget.Global);
+        provider._onDidChangeTreeData.fire();
+    });
+
+    // add note: ask for folder name
+
+    // delete folder: only possible for empty folders
+
+    // delete note, select folder first, then select note
 }
 

@@ -56,6 +56,16 @@
 				"command": "syncedNotes.removeFolder",
 				"title": "removeFolder",
 				"category": "syncedNotes"
+			},
+			{
+				"command": "syncedNotes.showNote",
+				"title": "showNote",
+				"category": "syncedNotes"
+			},
+			{
+				"command": "syncedNotes.editNote",
+				"title": "editNote",
+				"category": "syncedNotes"
 			}
 		],
 		"menus": {
