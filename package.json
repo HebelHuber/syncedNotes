@@ -88,12 +88,18 @@
 					"when": "view == syncednotes-explorer && viewItem == note"
 				},
 				{
+					"command": "syncedNotes.editNote",
+					"group": "inline",
+					"when": "view == syncednotes-explorer && viewItem == note"
+				},
+				{
 					"command": "syncedNotes.removeFolder",
 					"group": "inline",
-					"when": "view == syncednotes-explorer && viewItem == folder"
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
 				}
-]
-},
+			]
+		},
 		"configuration": [
 			{
 				"title": "Synced Notes",
@@ -110,15 +116,29 @@
 				"type": "object",
 				"properties": {
 					"syncedNotes.notes": {
-						"default": {
-							"folder_A": {
-								"note 1": "IyB0aGlzIGlzIGEgdGVzdCBub3RlCgotIGxvbGxvMQotIGxvbGxvMg==",
-								"note 2": "IyB0aGlzIGlzIGEgdGVzdCBub3RlCgotIGxvbGxvMQotIGxvbGxvMg=="
-							},
-							"folder_B": {
-								"note 3": "IyB0aGlzIGlzIGEgdGVzdCBub3RlCgotIGxvbGxvMQotIGxvbGxvMg==",
-								"note 4": "IyB0aGlzIGlzIGEgdGVzdCBub3RlCgotIGxvbGxvMQotIGxvbGxvMg=="
+						"$schema": {
+							"type": "array",
+							"items": [
+								{
+									"type": "object",
+									"properties": {
+										"name": {
+											"type": "string"
+										},
+										"folder": {
+											"type": "string"
+										},
+										"content": {
+											"type": "string"
+										}
+									},
+								"required": [
+									"content",
+									"name",
+									"folder"
+								]
 							}
+							]
 						}
 					}
 				}

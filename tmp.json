@@ -1,0 +1,10 @@
+{
+    "autorefresh": true,
+    "notes": {
+        "id_A": {
+            "name": "a",
+            "folder": "b",
+            "content": "c"
+        }
+    }
+}
