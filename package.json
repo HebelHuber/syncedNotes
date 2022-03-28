@@ -106,42 +106,13 @@
 				"properties": {
 					"syncedNotes.autorefresh": {
 						"type": "boolean",
-						"default": false
+						"default": true
 					}
 				}
 			},
 			{
 				"title": "syncedNotes.notes",
-				"order": 2,
-				"type": "object",
-				"properties": {
-					"syncedNotes.notes": {
-						"$schema": {
-							"type": "array",
-							"items": [
-								{
-									"type": "object",
-									"properties": {
-										"name": {
-											"type": "string"
-										},
-										"folder": {
-											"type": "string"
-										},
-										"content": {
-											"type": "string"
-										}
-									},
-								"required": [
-									"content",
-									"name",
-									"folder"
-								]
-							}
-							]
-						}
-					}
-				}
+				"type": "object"
 			}
 		]
 	},
