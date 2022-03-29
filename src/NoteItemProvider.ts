@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { decode, encode } from './utils';
+import { decode, encode } from './encoding';
 import { NoteItem } from './NoteItem';
 
 interface ParsedNote {
@@ -93,7 +93,7 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
     async selectNoteFromList(): Promise<NoteItem | undefined> {
         let selected = await this.showQuickPick(this.data, 'select note');
-        while (selected != undefined && selected.contextValue != "note") {
+        while (selected != undefined && selected.isFolder) {
             selected = await this.showQuickPick(selected.getChildren(true, true), 'select note');
         }
         return selected;
@@ -109,10 +109,10 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
         });
 
         if (!includeFolders)
-            out = out.filter(item => item.contextValue != "folder");
+            out = out.filter(item => !item.isFolder);
 
         if (!includeNotes)
-            out = out.filter(item => item.contextValue != "note");
+            out = out.filter(item => item.isFolder);
 
         return out;
     }
@@ -132,15 +132,20 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
     }
 
     async saveToConfig(): Promise<void> {
-        const config = await vscode.workspace.getConfiguration('syncedNotes');
 
-        this.logger.appendLine('========= Saving to config...');
+        await this.logger.appendLine('========= Saving to config...');
 
         const json = `[${this.data.map(item => item.getJson()).join(',')}]`;
-        // this.logger.appendLine(json);
-        const json2 = JSON.parse(json);
-        // this.logger.appendLine(`${JSON.stringify(json2, null, 4)}`);
+        // await this.logger.appendLine(json);
+        try {
+            const json2 = JSON.parse(json);
+            // await this.logger.appendLine(`${JSON.stringify(json2, null, 4)}`);
+            const config = await vscode.workspace.getConfiguration('syncedNotes');
+            await config.update('notes', json2, vscode.ConfigurationTarget.Global);
+        }
+        catch (e) {
+            await this.logger.appendLine(`Error parsing json: ${e}`);
+        }
 
-        config.update('notes', json2, vscode.ConfigurationTarget.Global);
     }
 }

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { decode, encode } from './utils';
+import { decode, encode } from './encoding';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
@@ -11,39 +11,44 @@ export class NoteItem extends vscode.TreeItem {
     fullPath: string;
     command?: vscode.Command | undefined;
     owner: NoteItemProvider;
-    iconPath?: string | vscode.Uri | { light: string | vscode.Uri; dark: string | vscode.Uri; } | vscode.ThemeIcon | undefined;
+    iconPath?: string | vscode.Uri | { light: string | vscode.Uri; dark: string | vscode.Uri } | vscode.ThemeIcon | undefined;
+    isFolder = true;
 
     constructor(label: string, fullPath: string, owner: NoteItemProvider, content?: string, children?: NoteItem[]) {
-        super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
+        super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Collapsed);
         this.children = children;
         this.content = content;
         this.fullPath = fullPath;
-        this.contextValue = children === undefined ? 'note' : 'folder';
         this.owner = owner;
 
-        this.command = {
+        this.updateItemState();
+    }
+
+    updateItemState(): void {
+
+        this.isFolder = this.children !== undefined;
+        this.contextValue = this.isFolder ? 'folder' : 'note';
+        this.iconPath = this.isFolder ? vscode.ThemeIcon.Folder : vscode.ThemeIcon.File;
+
+        this.collapsibleState = this.isFolder ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
+
+        this.command = this.isFolder ? undefined : {
             title: "Show Node",
             command: "syncedNotes.showNote",
             arguments: [this]
         };
-
-        // TODO for folders: change collapse state on click
-
-        this.iconPath = children === undefined ? vscode.ThemeIcon.File : vscode.ThemeIcon.Folder;
     }
 
-    getTooltip(): string {
-        return this.label as string;
-    }
+    // getTooltip(): string {
+    //     return this.label as string;
+    // }
 
     addChild(child: NoteItem): void {
         if (this.children === undefined)
             this.children = [];
 
         this.children.push(child);
-        this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-        this.contextValue = this.children.length > 0 ? 'folder' : 'note';
-        this.iconPath = this.children === undefined ? vscode.ThemeIcon.File : vscode.ThemeIcon.Folder;
+        this.updateItemState();
     }
 
     getTempFileName(): string {
@@ -59,22 +64,23 @@ export class NoteItem extends vscode.TreeItem {
             return this.children;
 
         if (includeNotes && !includeFolders)
-            return this.children.filter(child => child.contextValue === 'note');
+            return this.children.filter(child => !child.isFolder);
 
         if (includeFolders && !includeNotes)
-            return this.children.filter(child => child.contextValue === 'folder');
+            return this.children.filter(child => child.isFolder);
 
         return [];
     }
 
     getJson(): string {
 
-        // I'm a leaf
-        if (this.children == undefined)
-            return `{"${this.label}" : "${this.content}"}`;
-
         // I'm a folder
-        return `{"${this.label}":[${this.children.map(child => child.getJson()).join(',')}]}`;
+        if (this.isFolder)
+            return `{"${this.label}":[${this.children?.map(child => child.getJson()).join(',')}]}`;
+
+        // I'm a leaf
+        return `{"${this.label}" : "${this.content}"}`;
+
     }
 
     getChildrenRecursive(includeNotes: boolean, includeFolders: boolean): NoteItem[] {
@@ -90,7 +96,7 @@ export class NoteItem extends vscode.TreeItem {
         const tempFilePath = path.join(os.tmpdir(), this.getTempFileName());
         logger.appendLine(`temp file: ${tempFilePath}`);
 
-        await fs.writeFile(tempFilePath, decode(this.content as string), (err) => {
+        await fs.writeFile(tempFilePath, await decode(this.content as string), (err) => {
             if (err) logger.appendLine(`Error writing file: ${tempFilePath}, ${err}`);
         });
 
@@ -113,21 +119,26 @@ export class NoteItem extends vscode.TreeItem {
 
             const onSaveDisposable = vscode.workspace.onDidSaveTextDocument(async textDocument => {
                 if (textDocument.uri.fsPath === uri.fsPath) {
-                    logger.appendLine(`saving note ${this.label}`);
-                    const content = await textDocument.getText();
-                    this.content = encode(content);
-                    this.owner.saveToConfig();
+                    await this.saveNote(textDocument, logger);
                 }
             });
 
             const onCloseDisposable = vscode.workspace.onDidCloseTextDocument(async textDocument => {
                 if (textDocument.uri.fsPath === uri.fsPath) {
-                    logger.appendLine(`closed note ${this.label}`);
                     onSaveDisposable.dispose();
                     onCloseDisposable.dispose();
-                    this.owner.saveToConfig();
+                    await fs.unlink(uri.fsPath, (err) => {
+                        if (err) logger.appendLine(`Error deleting file: ${uri.fsPath}, ${err}`);
+                    });
                 }
             });
         });
+    }
+
+    async saveNote(textDocument: vscode.TextDocument, logger: vscode.OutputChannel): Promise<void> {
+        logger.appendLine(`saving note ${this.label}`);
+        const content = await textDocument.getText();
+        this.content = await encode(content, logger);
+        this.owner.saveToConfig();
     }
 }

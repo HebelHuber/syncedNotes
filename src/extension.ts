@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 
 import * as vscode from 'vscode';
-import { decode, encode } from './utils';
+import { decode, encode } from './encoding';
 import { NoteItem } from './NoteItem';
 import { NoteItemProvider } from './NoteItemProvider';
 import * as path from 'path';
@@ -59,9 +59,11 @@ export function activate(context: vscode.ExtensionContext) {
 
     vscode.commands.registerCommand('syncedNotes.showNote', async (note?: NoteItem) => {
 
+        logger.appendLine(`showNote: ${note?.label}`);
+
         if (note === undefined) note = await provider.selectNoteFromList();
 
-        if (note === undefined || note.contextValue !== 'note') {
+        if (note === undefined || note.isFolder) {
             vscode.window.showErrorMessage("No note selected");
             return;
         }
@@ -73,7 +75,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         if (note === undefined) note = await provider.selectNoteFromList();
 
-        if (note === undefined || note.contextValue !== 'note') {
+        if (note === undefined || note.isFolder) {
             vscode.window.showErrorMessage("No note selected");
             return;
         }
