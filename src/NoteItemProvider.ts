@@ -53,7 +53,7 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
                     else rootNodesArray.push(folderNode);
                     rootNodesArray.concat(this.getHierarchyRecursive(content, currentPath, rootNodesArray, folderNode));
                 } else {
-                    const self = new NoteItem(name, currentPath + ".md", this, content, undefined);
+                    const self = new NoteItem(name, currentPath, this, content, undefined);
 
                     if (parentNode) parentNode.addChild(self);
                     else rootNodesArray.push(self);
@@ -99,26 +99,48 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
         return selected;
     }
 
-    // async selectFolderFromList(): Promise<NoteItem | undefined> {
-    //     let selected = await this.showQuickPick(this.data.filter(note => note.contextValue == 'folder'), 'select folder');
-    //     while (selected != undefined) {
-    //         selected = await this.showQuickPick(selected.getChildren(false, true), 'select note');
-    //     }
-    //     return selected;
-    // }
+    async getAllNotes(includeNotes: boolean, includeFolders: boolean): Promise<NoteItem[]> {
+
+        let out: NoteItem[] = [];
+
+        this.data.forEach(item => {
+            out.push(item);
+            out = out.concat(item.getChildrenRecursive(true, true));
+        });
+
+        if (!includeFolders)
+            out = out.filter(item => item.contextValue != "folder");
+
+        if (!includeNotes)
+            out = out.filter(item => item.contextValue != "note");
+
+        return out;
+    }
+
+    addNestedArray(obj: any, chunks: string[]): void {
+
+        const returner = Object.assign({}, obj);
+
+        for (let i = 0; i < chunks.length; i++) {
+
+            if (!Object.keys(obj).includes(chunks[0])) {
+                obj[chunks[0]] = [];
+            }
+
+            obj = obj[chunks[0]];
+        }
+    }
 
     async saveToConfig(): Promise<void> {
         const config = await vscode.workspace.getConfiguration('syncedNotes');
 
-        // TODO save back to settings
+        this.logger.appendLine('========= Saving to config...');
 
-        // assemble a new config array
-        this.data.forEach(item => {
-            const test = item.getChildrenRecursive(true, true);
-            this.logger.appendLine(`${JSON.stringify(test, null, 4)}`);
-        });
+        const json = `[${this.data.map(item => item.getJson()).join(',')}]`;
+        // this.logger.appendLine(json);
+        const json2 = JSON.parse(json);
+        // this.logger.appendLine(`${JSON.stringify(json2, null, 4)}`);
 
-        // await config.update('notes', newFolders, vscode.ConfigurationTarget.Global);
-        // provider._onDidChangeTreeData.fire();
+        config.update('notes', json2, vscode.ConfigurationTarget.Global);
     }
 }

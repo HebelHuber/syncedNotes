@@ -11,6 +11,7 @@ export class NoteItem extends vscode.TreeItem {
     fullPath: string;
     command?: vscode.Command | undefined;
     owner: NoteItemProvider;
+    iconPath?: string | vscode.Uri | { light: string | vscode.Uri; dark: string | vscode.Uri; } | vscode.ThemeIcon | undefined;
 
     constructor(label: string, fullPath: string, owner: NoteItemProvider, content?: string, children?: NoteItem[]) {
         super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded);
@@ -25,6 +26,14 @@ export class NoteItem extends vscode.TreeItem {
             command: "syncedNotes.showNote",
             arguments: [this]
         };
+
+        // TODO for folders: change collapse state on click
+
+        this.iconPath = children === undefined ? vscode.ThemeIcon.File : vscode.ThemeIcon.Folder;
+    }
+
+    getTooltip(): string {
+        return this.label as string;
     }
 
     addChild(child: NoteItem): void {
@@ -34,10 +43,11 @@ export class NoteItem extends vscode.TreeItem {
         this.children.push(child);
         this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         this.contextValue = this.children.length > 0 ? 'folder' : 'note';
+        this.iconPath = this.children === undefined ? vscode.ThemeIcon.File : vscode.ThemeIcon.Folder;
     }
 
     getTempFileName(): string {
-        return this.label as string;
+        return this.label as string + ".md";
         // return this.fullPath.replace(/\//g, '_');
     }
 
@@ -55,6 +65,16 @@ export class NoteItem extends vscode.TreeItem {
             return this.children.filter(child => child.contextValue === 'folder');
 
         return [];
+    }
+
+    getJson(): string {
+
+        // I'm a leaf
+        if (this.children == undefined)
+            return `{"${this.label}" : "${this.content}"}`;
+
+        // I'm a folder
+        return `{"${this.label}":[${this.children.map(child => child.getJson()).join(',')}]}`;
     }
 
     getChildrenRecursive(includeNotes: boolean, includeFolders: boolean): NoteItem[] {
@@ -96,6 +116,7 @@ export class NoteItem extends vscode.TreeItem {
                     logger.appendLine(`saving note ${this.label}`);
                     const content = await textDocument.getText();
                     this.content = encode(content);
+                    this.owner.saveToConfig();
                 }
             });
 
@@ -104,7 +125,6 @@ export class NoteItem extends vscode.TreeItem {
                     logger.appendLine(`closed note ${this.label}`);
                     onSaveDisposable.dispose();
                     onCloseDisposable.dispose();
-
                     this.owner.saveToConfig();
                 }
             });

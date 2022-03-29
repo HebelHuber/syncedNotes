@@ -45,12 +45,6 @@
 				"icon": "$(add)"
 			},
 			{
-				"command": "syncedNotes.deleteNote",
-				"title": "deleteNote",
-				"category": "syncedNotes",
-				"icon": "$(trash)"
-			},
-			{
 				"command": "syncedNotes.showNote",
 				"title": "showNote",
 				"category": "syncedNotes",
@@ -63,10 +57,22 @@
 				"icon": "$(pencil)"
 			},
 			{
+				"command": "syncedNotes.deleteNote",
+				"title": "deleteNote",
+				"category": "syncedNotes",
+				"icon": "$(trash)"
+			},
+			{
 				"command": "syncedNotes.addFolder",
 				"title": "addFolder",
 				"category": "syncedNotes",
 				"icon": "$(add)"
+			},
+			{
+				"command": "syncedNotes.renameFolder",
+				"title": "rename folder",
+				"category": "syncedNotes",
+				"icon": "$(arrow-swap)"
 			},
 			{
 				"command": "syncedNotes.removeFolder",
@@ -92,17 +98,26 @@
 				{
 					"command": "syncedNotes.showNote",
 					"group": "inline",
-					"when": "view == syncednotes-explorer && viewItem == note"
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
 				},
 				{
 					"command": "syncedNotes.editNote",
 					"group": "inline",
-					"when": "view == syncednotes-explorer && viewItem == note"
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
 				},
 				{
 					"command": "syncedNotes.deleteNote",
 					"group": "inline",
-					"when": "view == syncednotes-explorer && viewItem == note"
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.renameFolder",
+					"group": "inline",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
 				},
 				{
 					"command": "syncedNotes.removeFolder",
