@@ -4,7 +4,6 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "OIOIOIOI",
 			"type": "npm",
 			"script": "watch",
 			"problemMatcher": {
@@ -15,37 +14,14 @@
 					"endsPattern": ".*Watching for file changes\\."
 				}
 			},
-			"isBackground": false,
+			"isBackground": true,
 			"presentation": {
-				"reveal": "silent"
+				"reveal": "never"
 			},
 			"group": {
 				"kind": "build",
 				"isDefault": true
 			}
-		},
-		{
-			"type": "npm",
-			"script": "watch",
-			"problemMatcher": "$tsc-watch",
-			"isBackground": false,
-			"presentation": {
-				"reveal": "silent"
-			},
-			// "group": {
-			// "kind": "build",
-			// "isDefault": true
-			// }
-		},
-		{
-			"type": "npm",
-			"script": "compile",
-			"label": "compile",
-			// "problemMatcher": "$tsc-watch",
-			"isBackground": false,
-			"presentation": {
-				"reveal": "silent"
-			},
 		},
 		{
 			"type": "shell",

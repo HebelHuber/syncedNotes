@@ -5,6 +5,9 @@ import * as vscode from 'vscode';
 import { decode, encode } from './utils';
 import { NoteItem } from './NoteItem';
 import { NoteItemProvider } from './NoteItemProvider';
+import * as path from 'path';
+import * as os from 'os';
+import * as fs from 'fs';
 
 let lastOpenedNote: vscode.TextDocument;
 
@@ -29,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }));
 
-    vscode.commands.registerCommand('syncedNotes.refreshNotes', () => provider.loadFromConfig());
+    vscode.commands.registerCommand('syncedNotes.refreshNoteView', () => provider.loadFromConfig());
     vscode.window.registerTreeDataProvider('syncednotes-explorer', provider);
 
     // add folder: ask for folder name, compare with existing
@@ -54,42 +57,28 @@ export function activate(context: vscode.ExtensionContext) {
         provider._onDidChangeTreeData.fire();
     });
 
-    vscode.workspace.onDidOpenTextDocument((doc: vscode.TextDocument) => {
-        // if (doc === lastOpenedNote)
-        console.log("onDidOpenTextDocument", doc);
-    }, null, context.subscriptions);
+    vscode.commands.registerCommand('syncedNotes.showNote', async (note?: NoteItem) => {
 
-    vscode.workspace.onDidSaveTextDocument((doc: vscode.TextDocument) => {
-        // if (doc === lastOpenedNote)
-        console.log("onDidSaveTextDocument", doc);
-    }, null, context.subscriptions);
+        if (note === undefined) note = await provider.selectNoteFromList();
 
-    vscode.workspace.onDidCloseTextDocument((doc: vscode.TextDocument) => {
-        // if (doc === lastOpenedNote)
-        console.log("onDidCloseTextDocument", doc);
-    }, null, context.subscriptions);
-
-    vscode.commands.registerCommand('syncedNotes.editNote', async (note?: NoteItem) => {
-
-        if (note === undefined) {
-            // TODO show folder and then note selection
+        if (note === undefined || note.contextValue !== 'note') {
             vscode.window.showErrorMessage("No note selected");
             return;
         }
 
-        logger.appendLine(`editing note ${note.label}`);
+        note.showPreview(logger);
+    });
 
-        // TODO subscribe to changes to note, USE TEMP FILE FOR EDITING
-        // vscode.workspace.openTextDocument({
-        //     content: note.content as string,
-        //     language: 'markdown'
-        // }).then(doc => {
-        //     lastOpenedNote = doc;
-        //     vscode.window.showTextDocument(doc)
-        //         .then((editor: vscode.TextEditor) => {
-        //             editor.document.onSave ????
-        //         });
-        // });
+    vscode.commands.registerCommand('syncedNotes.editNote', async (note?: NoteItem) => {
+
+        if (note === undefined) note = await provider.selectNoteFromList();
+
+        if (note === undefined || note.contextValue !== 'note') {
+            vscode.window.showErrorMessage("No note selected");
+            return;
+        }
+
+        note.openEditor(logger);
     });
 
     vscode.commands.registerCommand('syncedNotes.removeFolder', async (folderItem?: NoteItem) => {
@@ -127,14 +116,5 @@ export function activate(context: vscode.ExtensionContext) {
         await config.update('notes', newFolders, vscode.ConfigurationTarget.Global);
         provider._onDidChangeTreeData.fire();
     });
-
-    // add note: ask for folder name
-
-    // delete folder: only possible for empty folders
-
-    // delete note, select folder first, then select note
-
-
-
 }
 

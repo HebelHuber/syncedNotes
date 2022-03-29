@@ -8,6 +8,20 @@ interface ParsedNote {
     folder: string;
 }
 
+class QuickPickNote implements vscode.QuickPickItem {
+
+    label: string;
+    description: string;
+    note: NoteItem;
+
+    constructor(item: NoteItem, desc?: string) {
+        this.label = item.label as string;
+        this.note = item;
+        if (desc) this.description = desc;
+        else this.description = "";
+    }
+}
+
 export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
     _onDidChangeTreeData: vscode.EventEmitter<NoteItem> = new vscode.EventEmitter<NoteItem>();
@@ -15,71 +29,46 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
     data: NoteItem[] = [];
     logger: vscode.OutputChannel;
+    debugMode = false;
 
     constructor(logger: vscode.OutputChannel) {
         this.logger = logger;
         this.loadFromConfig();
     }
 
-    loadFromConfig(): void {
+    getHierarchyRecursive(obj: any[], path: string, rootNodesArray: Array<NoteItem>, parentNode?: NoteItem): Array<NoteItem> {
 
-        // TODO notes sollte ein dict in den settings sein, dann sind die names unique
+        for (const value of Object.values(obj)) {
+            Object.keys(value).forEach(key => {
+                const content = value[key];
 
-        this.logger.appendLine('Loading from config...');
+                const name = key;
+                const currentPath = path + "/" + name;
 
-        const allNotesArray = new Array<NoteItem>();
-        const config = vscode.workspace.getConfiguration('syncedNotes');
+                if (this.debugMode) this.logger.appendLine(`${currentPath}`);
 
-        // parse json for folders and notes
-        for (const noteIndex in config.notes) {
+                if (Array.isArray(content)) {
+                    const folderNode = new NoteItem(name, currentPath, this, undefined);
+                    if (parentNode) parentNode.addChild(folderNode);
+                    else rootNodesArray.push(folderNode);
+                    rootNodesArray.concat(this.getHierarchyRecursive(content, currentPath, rootNodesArray, folderNode));
+                } else {
+                    const self = new NoteItem(name, currentPath + ".md", this, content, undefined);
 
-            const noteParsed: ParsedNote = JSON.parse(JSON.stringify(config.notes[noteIndex]));
-
-            if (noteParsed.folder.includes("/")) {
-
-                // walk path and create notes if they dont exist
-                let thisPath = "";
-                const pathChunks = noteParsed.folder.split('/');
-                for (let i = 0; i < pathChunks.length; i++) {
-
-                    const thisChunk = pathChunks[i];
-                    thisPath += thisChunk;
-
-                    if (!allNotesArray.some(element => element.fullPath === thisPath)) {
-                        allNotesArray.push(new NoteItem(thisChunk, thisPath, undefined));
-                    }
-
-                    thisPath += "/";
-                };
-            }
-
-            // add the note itself
-
-            allNotesArray.push(
-                new NoteItem(
-                    noteParsed.name,
-                    noteParsed.folder + "/" + noteParsed.name,
-                    noteParsed.content,
-                    undefined
-                )
-            );
+                    if (parentNode) parentNode.addChild(self);
+                    else rootNodesArray.push(self);
+                }
+            });
         }
 
-        // link up the node tree
-        allNotesArray
-            .filter(element => element.fullPath.includes("/")) // skip root notes
-            .forEach(element => {
-                const parentPath = element.fullPath.substring(0, element.fullPath.lastIndexOf("/"));
-                const parent = allNotesArray.find(element => element.fullPath === parentPath);
-                parent?.addChild(element);
-            });
+        return rootNodesArray;
+    }
 
-        // add root nodes as data (also notes with empty folder)
-        this.data = allNotesArray
-            .filter(element =>
-                !element.fullPath.includes("/") ||
-                element.fullPath.startsWith("/")
-            );
+    loadFromConfig(): void {
+        if (this.debugMode) this.logger.appendLine('========= Loading from config...');
+        const config = vscode.workspace.getConfiguration('syncedNotes');
+        this.debugMode = config.debugMode;
+        this.data = this.getHierarchyRecursive(config.notes, "", new Array<NoteItem>());
     }
 
     getTreeItem(element: NoteItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
@@ -92,5 +81,44 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
             return this.data;
         }
         return element.children;
+    }
+
+    async showQuickPick(items: NoteItem[], placeHolder: string): Promise<NoteItem | undefined> {
+        const quickPickItems = items.map(item => new QuickPickNote(item));
+        const result = await vscode.window.showQuickPick(quickPickItems, {
+            placeHolder: placeHolder
+        });
+        return result?.note;
+    }
+
+    async selectNoteFromList(): Promise<NoteItem | undefined> {
+        let selected = await this.showQuickPick(this.data, 'select note');
+        while (selected != undefined && selected.contextValue != "note") {
+            selected = await this.showQuickPick(selected.getChildren(true, true), 'select note');
+        }
+        return selected;
+    }
+
+    // async selectFolderFromList(): Promise<NoteItem | undefined> {
+    //     let selected = await this.showQuickPick(this.data.filter(note => note.contextValue == 'folder'), 'select folder');
+    //     while (selected != undefined) {
+    //         selected = await this.showQuickPick(selected.getChildren(false, true), 'select note');
+    //     }
+    //     return selected;
+    // }
+
+    async saveToConfig(): Promise<void> {
+        const config = await vscode.workspace.getConfiguration('syncedNotes');
+
+        // TODO save back to settings
+
+        // assemble a new config array
+        this.data.forEach(item => {
+            const test = item.getChildrenRecursive(true, true);
+            this.logger.appendLine(`${JSON.stringify(test, null, 4)}`);
+        });
+
+        // await config.update('notes', newFolders, vscode.ConfigurationTarget.Global);
+        // provider._onDidChangeTreeData.fire();
     }
 }

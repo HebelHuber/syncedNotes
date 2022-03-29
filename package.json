@@ -33,45 +33,52 @@
 		},
 		"commands": [
 			{
-				"command": "syncedNotes.refreshNotes",
-				"title": "refreshNotes",
-				"category": "syncedNotes"
+				"command": "syncedNotes.refreshNoteView",
+				"title": "refreshNoteView",
+				"category": "syncedNotes",
+				"icon": "$(refresh)"
 			},
 			{
-				"command": "syncedNotes.addEntry",
-				"title": "addEntry",
-				"category": "syncedNotes"
+				"command": "syncedNotes.addNote",
+				"title": "addNote",
+				"category": "syncedNotes",
+				"icon": "$(add)"
 			},
 			{
-				"command": "syncedNotes.deleteEntry",
-				"title": "deleteEntry",
-				"category": "syncedNotes"
-			},
-			{
-				"command": "syncedNotes.addFolder",
-				"title": "addFolder",
-				"category": "syncedNotes"
-			},
-			{
-				"command": "syncedNotes.removeFolder",
-				"title": "removeFolder",
-				"category": "syncedNotes"
+				"command": "syncedNotes.deleteNote",
+				"title": "deleteNote",
+				"category": "syncedNotes",
+				"icon": "$(trash)"
 			},
 			{
 				"command": "syncedNotes.showNote",
 				"title": "showNote",
-				"category": "syncedNotes"
+				"category": "syncedNotes",
+				"icon": "$(eye)"
 			},
 			{
 				"command": "syncedNotes.editNote",
 				"title": "editNote",
-				"category": "syncedNotes"
+				"category": "syncedNotes",
+				"icon": "$(pencil)"
+			},
+			{
+				"command": "syncedNotes.addFolder",
+				"title": "addFolder",
+				"category": "syncedNotes",
+				"icon": "$(add)"
+			},
+			{
+				"command": "syncedNotes.removeFolder",
+				"title": "removeFolder",
+				"category": "syncedNotes",
+				"icon": "$(trash)"
 			}
 		],
 		"menus": {
 			"view/title": [
 				{
-					"command": "syncedNotes.refreshNotes",
+					"command": "syncedNotes.refreshNoteView",
 					"when": "view == syncednotes-explorer",
 					"group": "navigation"
 				},
@@ -83,12 +90,17 @@
 			],
 			"view/item/context": [
 				{
-					"command": "syncedNotes.deleteEntry",
+					"command": "syncedNotes.showNote",
 					"group": "inline",
 					"when": "view == syncednotes-explorer && viewItem == note"
 				},
 				{
 					"command": "syncedNotes.editNote",
+					"group": "inline",
+					"when": "view == syncednotes-explorer && viewItem == note"
+				},
+				{
+					"command": "syncedNotes.deleteNote",
 					"group": "inline",
 					"when": "view == syncednotes-explorer && viewItem == note"
 				},
@@ -106,13 +118,17 @@
 				"properties": {
 					"syncedNotes.autorefresh": {
 						"type": "boolean",
-						"default": true
+						"default": true,
+						"description": "Automatically refresh the notes when the settings change"
+					},
+					"syncedNotes.debugMode": {
+						"type": "boolean",
+						"default": false
+					},
+					"syncedNotes.notes": {
+						"type": "array"
 					}
 				}
-			},
-			{
-				"title": "syncedNotes.notes",
-				"type": "object"
 			}
 		]
 	},
@@ -140,6 +156,7 @@
 		"typescript": "^3.7.5",
 		"vscode-test": "^1.2.2",
 		"vsce": "^2.6.7",
-		"yarn": "^1.22.17"
+		"yarn": "^1.22.17",
+		"temp": "0.9.4"
 	}
 }
