@@ -34,49 +34,49 @@
 		"commands": [
 			{
 				"command": "syncedNotes.refreshNoteView",
-				"title": "refreshNoteView",
+				"title": "refresh synced notes view",
 				"category": "syncedNotes",
 				"icon": "$(refresh)"
 			},
 			{
 				"command": "syncedNotes.addNote",
-				"title": "addNote",
+				"title": "add synced note",
 				"category": "syncedNotes",
-				"icon": "$(add)"
+				"icon": "$(new-file)"
 			},
 			{
 				"command": "syncedNotes.showNote",
-				"title": "showNote",
+				"title": "show sycned note",
 				"category": "syncedNotes",
 				"icon": "$(eye)"
 			},
 			{
 				"command": "syncedNotes.editNote",
-				"title": "editNote",
+				"title": "edit synced note",
 				"category": "syncedNotes",
 				"icon": "$(pencil)"
 			},
 			{
 				"command": "syncedNotes.deleteNote",
-				"title": "deleteNote",
+				"title": "delete sycned note",
 				"category": "syncedNotes",
 				"icon": "$(trash)"
 			},
 			{
 				"command": "syncedNotes.addFolder",
-				"title": "addFolder",
+				"title": "add synced notes folder",
 				"category": "syncedNotes",
-				"icon": "$(add)"
+				"icon": "$(new-folder)"
 			},
 			{
 				"command": "syncedNotes.renameFolder",
-				"title": "rename folder",
+				"title": "rename synced notes folder",
 				"category": "syncedNotes",
-				"icon": "$(arrow-swap)"
+				"icon": "$(pencil)"
 			},
 			{
 				"command": "syncedNotes.removeFolder",
-				"title": "removeFolder",
+				"title": "remove synced notes Folder",
 				"category": "syncedNotes",
 				"icon": "$(trash)"
 			}
@@ -95,12 +95,6 @@
 				}
 			],
 			"view/item/context": [
-				{
-					"command": "syncedNotes.showNote",
-					"group": "inline",
-					"when": "view == syncednotes-explorer && viewItem == note",
-					"args": "viewItem"
-				},
 				{
 					"command": "syncedNotes.editNote",
 					"group": "inline",
@@ -121,6 +115,12 @@
 				},
 				{
 					"command": "syncedNotes.removeFolder",
+					"group": "inline",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.addFolder",
 					"group": "inline",
 					"when": "view == syncednotes-explorer && viewItem == folder",
 					"args": "viewItem"
