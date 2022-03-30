@@ -38,22 +38,33 @@ export function activate(context: vscode.ExtensionContext) {
     // add folder: ask for folder name, compare with existing
     vscode.commands.registerCommand('syncedNotes.addFolder', async () => {
 
-        const newFolderName = await vscode.window.showInputBox({
-            prompt: 'Please enter a folder for your note'
-        }) as string;
+        const parentFolder = await provider.selectFolderFromList('Select parent folder', true);
 
-        const config = await vscode.workspace.getConfiguration('syncedNotes');
-        const existingFolders = config.notes;
-
-        if (newFolderName in existingFolders) {
-            vscode.window.showErrorMessage(`Folder ${newFolderName} already exists`);
+        if (!parentFolder) {
+            logger.appendLine("No parent folder selected");
             return;
         }
+        else {
+            logger.appendLine(`parent folder: ${parentFolder.label}`);
+        }
 
-        const newFolders = {};
-        Object.assign(newFolders, existingFolders, { [newFolderName]: {} });
 
-        await config.update('notes', newFolders, vscode.ConfigurationTarget.Global);
+        // const newFolderName = await vscode.window.showInputBox({
+        //     prompt: 'Please enter a folder for your note'
+        // }) as string;
+
+        // const config = await vscode.workspace.getConfiguration('syncedNotes');
+        // const existingFolders = config.notes;
+
+        // if (newFolderName in existingFolders) {
+        //     vscode.window.showErrorMessage(`Folder ${newFolderName} already exists`);
+        //     return;
+        // }
+
+        // const newFolders = {};
+        // Object.assign(newFolders, existingFolders, { [newFolderName]: {} });
+
+        // await config.update('notes', newFolders, vscode.ConfigurationTarget.Global);
         provider._onDidChangeTreeData.fire();
     });
 
@@ -61,7 +72,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         logger.appendLine(`showNote: ${note?.label}`);
 
-        if (note === undefined) note = await provider.selectNoteFromList();
+        if (note === undefined) note = await provider.selectNoteFromList('select note to show');
 
         if (note === undefined || note.isFolder) {
             vscode.window.showErrorMessage("No note selected");
@@ -73,7 +84,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     vscode.commands.registerCommand('syncedNotes.editNote', async (note?: NoteItem) => {
 
-        if (note === undefined) note = await provider.selectNoteFromList();
+        if (note === undefined) note = await provider.selectNoteFromList('select note to edit');
 
         if (note === undefined || note.isFolder) {
             vscode.window.showErrorMessage("No note selected");

@@ -1,26 +1,6 @@
 import * as vscode from 'vscode';
-import { decode, encode } from './encoding';
 import { NoteItem } from './NoteItem';
-
-interface ParsedNote {
-    content: string;
-    name: string;
-    folder: string;
-}
-
-class QuickPickNote implements vscode.QuickPickItem {
-
-    label: string;
-    description: string;
-    note: NoteItem;
-
-    constructor(item: NoteItem, desc?: string) {
-        this.label = item.label as string;
-        this.note = item;
-        if (desc) this.description = desc;
-        else this.description = "";
-    }
-}
+import { QuickPickNote } from './QuickPickNote';
 
 export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
@@ -48,13 +28,12 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
                 if (this.debugMode) this.logger.appendLine(`${currentPath}`);
 
                 if (Array.isArray(content)) {
-                    const folderNode = new NoteItem(name, currentPath, this, undefined);
+                    const folderNode = new NoteItem(name, currentPath, this, undefined, []);
                     if (parentNode) parentNode.addChild(folderNode);
                     else rootNodesArray.push(folderNode);
                     rootNodesArray.concat(this.getHierarchyRecursive(content, currentPath, rootNodesArray, folderNode));
                 } else {
                     const self = new NoteItem(name, currentPath, this, content, undefined);
-
                     if (parentNode) parentNode.addChild(self);
                     else rootNodesArray.push(self);
                 }
@@ -83,52 +62,66 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
         return element.children;
     }
 
-    async showQuickPick(items: NoteItem[], placeHolder: string): Promise<NoteItem | undefined> {
+    async showQuickPick(items: NoteItem[], title: string, additionalOptionTitle?: string, additionalOptionDesc?: string): Promise<NoteItem | undefined> {
         const quickPickItems = items.map(item => new QuickPickNote(item));
+
+        if (additionalOptionTitle)
+            quickPickItems.push(new QuickPickNote(undefined, additionalOptionDesc, additionalOptionTitle));
+
         const result = await vscode.window.showQuickPick(quickPickItems, {
-            placeHolder: placeHolder
+            placeHolder: title,
+            // title: title,
+            canPickMany: false,
+            ignoreFocusOut: true,
         });
         return result?.note;
     }
 
-    async selectNoteFromList(): Promise<NoteItem | undefined> {
-        let selected = await this.showQuickPick(this.data, 'select note');
-        while (selected != undefined && selected.isFolder) {
-            selected = await this.showQuickPick(selected.getChildren(true, true), 'select note');
+    async selectNoteFromList(title: string): Promise<NoteItem | undefined> {
+
+        const rootFolders = this.data.filter(note => note.isFolder && !note.isEmptyFolder && note.containsTextNoteRecursive());
+        let selected = await this.showQuickPick(rootFolders, title);
+        this.logger.appendLine(`selected: ${selected}`);
+
+        while (selected != undefined) {
+            const newOptions = selected.getChildren(true, true, false).filter(note => note.containsTextNoteRecursive());
+
+            if (newOptions.length == 0)
+                return selected;
+
+            selected = await this.showQuickPick(newOptions, title);
         }
+
         return selected;
     }
 
-    async getAllNotes(includeNotes: boolean, includeFolders: boolean): Promise<NoteItem[]> {
+    async selectFolderFromList(title: string, canAddNewFolder: boolean): Promise<NoteItem | undefined> {
 
-        let out: NoteItem[] = [];
+        const rootFolders = this.data.filter(note => note.isFolder);
+        let selected = await this.showQuickPick(rootFolders, title, canAddNewFolder ? '[NEW FOLDER HERE]' : undefined);
 
-        this.data.forEach(item => {
-            out.push(item);
-            out = out.concat(item.getChildrenRecursive(true, true));
-        });
+        this.logger.appendLine(`selected: ${selected}`);
 
-        if (!includeFolders)
-            out = out.filter(item => !item.isFolder);
+        while (selected != undefined) {
 
-        if (!includeNotes)
-            out = out.filter(item => item.isFolder);
-
-        return out;
-    }
-
-    addNestedArray(obj: any, chunks: string[]): void {
-
-        const returner = Object.assign({}, obj);
-
-        for (let i = 0; i < chunks.length; i++) {
-
-            if (!Object.keys(obj).includes(chunks[0])) {
-                obj[chunks[0]] = [];
+            const newOptions = selected.getChildren(false, true, true);
+            if (newOptions.length == 0) {
+                this.logger.appendLine(`No more folders found.`);
+                this.logger.appendLine(`newOptions: ${JSON.stringify(newOptions, null, 2)}`);
+                return selected;
             }
 
-            obj = obj[chunks[0]];
+            const newSelected = await this.showQuickPick(newOptions, title, canAddNewFolder ? '[NEW FOLDER HERE]' : undefined);
+
+            if (newSelected === undefined)
+                return undefined;
+            if (!newSelected.hasSubFolders)
+                return newSelected;
+
+            selected = newSelected;
         }
+
+        return selected;
     }
 
     async saveToConfig(): Promise<void> {
