@@ -19,7 +19,18 @@
 	},
 	"activationEvents": [
 		"onView:syncednotes-explorer",
-		"onStartupFinished"
+		"onStartupFinished",
+		"onCommand:syncedNotes.refreshNoteView",
+		"onCommand:syncedNotes.addNote",
+		"onCommand:syncedNotes.showNote",
+		"onCommand:syncedNotes.editNote",
+		"onCommand:syncedNotes.renameNote",
+		"onCommand:syncedNotes.moveNote",
+		"onCommand:syncedNotes.deleteNote",
+		"onCommand:syncedNotes.addFolder",
+		"onCommand:syncedNotes.renameFolder",
+		"onCommand:syncedNotes.moveFolder",
+		"onCommand:syncedNotes.deleteFolder"
 	],
 	"main": "./out/extension.js",
 	"extensionKind": [
