@@ -9,7 +9,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     //Create output channel
     const logger = vscode.window.createOutputChannel("synced notes");
-    // logger.show();
+    logger.show();
+    logger.appendLine("synced notes extension activated");
 
     const provider = new NoteItemProvider(logger)
 
@@ -20,8 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
             if (!vscode.workspace.getConfiguration('syncedNotes').autorefresh)
                 return;
 
-            // provider.loadFromConfig();
-            provider._onDidChangeTreeData.fire();
+            provider.loadFromConfig();
         }
     }));
 
