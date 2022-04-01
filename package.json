@@ -18,7 +18,8 @@
 		"type": "git"
 	},
 	"activationEvents": [
-		"onView:syncednotes-explorer"
+		"onView:syncednotes-explorer",
+		"onStartupFinished"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
