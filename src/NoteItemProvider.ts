@@ -76,9 +76,9 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 	// 	treeDataTransfer.set('application/vnd.code.tree.testViewDragAndDrop', new vscode.DataTransferItem(source));
 	// }
 
-    loadFromConfig(): void {
+    async loadFromConfig(): Promise<void> {
         if (this.debugMode) this.logger.appendLine('========= Loading from config...');
-        const config = vscode.workspace.getConfiguration('syncedNotes');
+        const config = await vscode.workspace.getConfiguration('syncedNotes');
         this.debugMode = config.debugMode;
         this.data = this.getHierarchyRecursive(config.notes, new Array<NoteItem>());
     }
