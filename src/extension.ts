@@ -27,11 +27,11 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     // X syncedNotes.refreshNoteView
-    
+
     // X syncedNotes.addNote
     // X syncedNotes.showNote
     // X syncedNotes.editNote
-    // o syncedNotes.renameNote
+    // x syncedNotes.renameNote
     // X syncedNotes.moveNote
     // X syncedNotes.deleteNote
     
