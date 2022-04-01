@@ -1,75 +1,252 @@
 {
-	"name": "git-angular-commits",
-	"displayName": "Git Angular Commits",
-	"description": "Extension to help for people who like using the Angular git convention",
+	"name": "vscode-notes",
+	"displayName": "Synced Notes",
+	"description": "Extension to edit, view and sync notes in vscode",
 	"publisher": "HebelHuber",
 	"qna": "marketplace",
-	"homepage": "https://github.com/HebelHuber/git-angular",
-	"version": "1.0.3",
+	"homepage": "https://github.com/HebelHuber/git-angular/tree/Notes-Sync",
+	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.41.0"
 	},
 	"categories": [
 		"Other"
 	],
+	"license": "MIT",
 	"repository": {
-		"url": "https://github.com/HebelHuber/git-angular.git",
+		"url": "https://github.com/HebelHuber/git-angular/tree/Notes-Sync.git",
 		"type": "git"
 	},
 	"activationEvents": [
-		"onCommand:gitAngular.commit"
+		"onView:syncednotes-explorer"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"views": {
+			"explorer": [
+				{
+					"id": "syncednotes-explorer",
+					"name": "Synced Notes",
+					"icon": "$(notebook)"
+				}
+			]
+		},
 		"commands": [
 			{
-				"command": "gitAngular.commit",
-				"title": "GitAngular Commit"
+				"command": "syncedNotes.refreshNoteView",
+				"title": "refresh Note list",
+				"category": "syncedNotes",
+				"icon": "$(refresh)"
+			},
+			{
+				"command": "syncedNotes.addNote",
+				"title": "add Note",
+				"category": "syncedNotes",
+				"icon": "$(new-file)"
+			},
+			{
+				"command": "syncedNotes.showNote",
+				"title": "show Note",
+				"category": "syncedNotes",
+				"icon": "$(eye)"
+			},
+			{
+				"command": "syncedNotes.editNote",
+				"title": "edit Note",
+				"category": "syncedNotes",
+				"icon": "$(pencil)"
+			},
+			{
+				"command": "syncedNotes.moveNote",
+				"title": "move Note",
+				"category": "syncedNotes",
+				"icon": "$(move)"
+			},
+			{
+				"command": "syncedNotes.renameNote",
+				"title": "rename Note",
+				"category": "syncedNotes",
+				"icon": "$(whitespace)"
+			},
+			{
+				"command": "syncedNotes.deleteNote",
+				"title": "delete Note",
+				"category": "syncedNotes",
+				"icon": "$(chrome-close)"
+			},
+			{
+				"command": "syncedNotes.addFolder",
+				"title": "add Folder",
+				"category": "syncedNotes",
+				"icon": "$(new-folder)"
+			},
+			{
+				"command": "syncedNotes.renameFolder",
+				"title": "rename Folder",
+				"category": "syncedNotes",
+				"icon": "$(whitespace)"
+			},
+			{
+				"command": "syncedNotes.moveFolder",
+				"title": "move Folder",
+				"category": "syncedNotes",
+				"icon": "$(move)"
+			},
+			{
+				"command": "syncedNotes.deleteFolder",
+				"title": "delete Folder",
+				"category": "syncedNotes",
+				"icon": "$(chrome-close)"
 			}
 		],
-		"configuration": {
-			"title": "Git Angular",
-			"properties": {
-				"gitAngular.allowNewTypes": {
-					"title": "Allow New Types",
-					"description": "Allow new types to be typed in during commit process",
-					"type": "boolean",
-					"scope": "resource",
-					"default": false
+		"menus": {
+			"view/title": [
+				{
+					"command": "syncedNotes.addNote",
+					"when": "view == syncednotes-explorer",
+					"group": "navigation"
 				},
-				"gitAngular.types": {
-					"title": "Types",
-					"type": "object",
-					"description": "Main type of the commit (fix, feature, test, etc)",
-					"scope": "resource",
-					"default": {
-						"build": "Changes that affect the build system or external dependencies",
-						"ci": "Changes to CI configuration files and scripts",
-						"docs": "Documentation only changes",
-						"feat": "A new feature",
-						"fix": "A bug fix",
-						"perf": "A code change that improves performance",
-						"style": "Changes that do not affect the meaning of the code (white space, formatting, missing, semi-colons, etc)",
-						"test": "Adding missing tests / correcting existing tests",
-						"[New]": "Add a new commit type"
+				{
+					"command": "syncedNotes.refreshNoteView",
+					"when": "view == syncednotes-explorer",
+					"group": "navigation"
+				},
+				{
+					"command": "syncedNotes.addFolder",
+					"when": "view == syncednotes-explorer",
+					"group": "navigation"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "syncedNotes.editNote",
+					"group": "inline@100",
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.renameNote",
+					"group": "inline@200",
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.moveNote",
+					"group": "inline@300",
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.deleteNote",
+					"group": "inline@400",
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.addNote",
+					"group": "inline@100",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.addFolder",
+					"group": "inline@200",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.renameFolder",
+					"group": "inline@300",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.moveFolder",
+					"group": "inline@400",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.deleteFolder",
+					"group": "inline@500",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.editNote",
+					"group": "contextmenu@100",
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.renameNote",
+					"group": "contextmenu@200",
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.moveNote",
+					"group": "contextmenu@300",
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.deleteNote",
+					"group": "contextmenu@400",
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.addNote",
+					"group": "contextmenu@100",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.addFolder",
+					"group": "contextmenu@200",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.renameFolder",
+					"group": "contextmenu@300",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.moveFolder",
+					"group": "contextmenu@400",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.deleteFolder",
+					"group": "contextmenu@500",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				}
+			]
+		},
+		"configuration": [
+			{
+				"title": "Synced Notes",
+				"properties": {
+					"syncedNotes.autorefresh": {
+						"type": "boolean",
+						"default": true,
+						"description": "Automatically refresh the notes when the settings change"
+					},
+					"syncedNotes.debugMode": {
+						"type": "boolean",
+						"default": false
+					},
+					"syncedNotes.notes": {
+						"type": "array"
 					}
-				},
-				"gitAngular.allowNewScopes": {
-					"title": "Allow New Scopes",
-					"description": "Allows new scopes to be typed in during commit process",
-					"type": "boolean",
-					"default": true
-				},
-				"gitAngular.scopes": {
-					"title": "Scopes",
-					"scope": "resource",
-					"type": "array",
-					"default": [
-						"root"
-					]
 				}
 			}
-		}
+		]
 	},
 	"scripts": {
 		"vscode:prepublish": "yarn run compile",
@@ -95,6 +272,8 @@
 		"typescript": "^3.7.5",
 		"vscode-test": "^1.2.2",
 		"vsce": "^2.6.7",
-		"yarn": "^1.22.17"
+		"yarn": "^1.22.17",
+		"temp": "0.9.4",
+		"lzutf8": "0.6.1"
 	}
 }

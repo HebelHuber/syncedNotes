@@ -6,7 +6,14 @@
 		{
 			"type": "npm",
 			"script": "watch",
-			"problemMatcher": "$tsc-watch",
+			"problemMatcher": {
+				"base": "$tsc-watch",
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": ".*Starting compilation in watch mode\\.\\.\\.",
+					"endsPattern": ".*Watching for file changes\\."
+				}
+			},
 			"isBackground": true,
 			"presentation": {
 				"reveal": "never"
@@ -15,6 +22,42 @@
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+		// {
+		// 	"type": "npm",
+		// 	"script": "watch",
+		// 	"problemMatcher": "$tsc-watch",
+		// 	"isBackground": true,
+		// 	"presentation": {
+		// 		"reveal": "never"
+		// 	},
+		// 	"group": {
+		// 		"kind": "build",
+		// 		"isDefault": true
+		// 	}
+		// }
+		// {
+		// 	"type": "npm",
+		// 	"script": "watch",
+		// 	"problemMatcher": "$tsc-watch",
+		// 	"isBackground": false,
+		// 	"presentation": {
+		// 		"reveal": "silent"
+		// 	},
+		// 	// "group": {
+		// 	// "kind": "build",
+		// 	// "isDefault": true
+		// 	// }
+		// },
+		{
+			"type": "npm",
+			"script": "compile",
+			"label": "compile",
+			// "problemMatcher": "$tsc-watch",
+			"isBackground": false,
+			"presentation": {
+				"reveal": "silent"
+			},
 		},
 		{
 			"type": "shell",

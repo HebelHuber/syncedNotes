@@ -17,6 +17,7 @@
 				"${workspaceFolder}/out/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
+			// "preLaunchTask": "compile"
 		},
 		{
 			"name": "Extension Tests",
