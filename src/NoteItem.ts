@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { decode, encode } from './encoding';
+import { decodeAsync, encodeAsync, encode, decode } from './encoding';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
@@ -32,7 +32,7 @@ export class NoteItem extends vscode.TreeItem {
     }
 
     static NewNote(label: string, owner: NoteItemProvider, content: string): NoteItem {
-        return new NoteItem(label, owner, content);
+        return new NoteItem(label, owner, encode(content));
     }
 
     static NewTempNote(label: string, owner: NoteItemProvider, optionalDescription?: string, optionalDetail?: string): NoteItem {
@@ -106,8 +106,13 @@ export class NoteItem extends vscode.TreeItem {
         this.owner.saveToConfig();
     }
 
-    rename(newLabel: string): void {
-        this.label = newLabel;
+    async rename(): Promise<void> {
+        const newName = await vscode.window.showInputBox({
+            prompt: 'enter new name',
+            placeHolder: this.label as string,
+        });
+        if (!newName) return;
+        this.label = newName;
         this.updateItemState();
         this.owner.saveToConfig();
     }
@@ -194,7 +199,7 @@ export class NoteItem extends vscode.TreeItem {
     // }
 
     async decodedContentAsync(truncateTo?: number): Promise<string> {
-        const decoded = await decode(this.content as string);
+        const decoded = await decodeAsync(this.content as string);
 
         if (truncateTo)
             return decoded.substr(0, truncateTo) + '...';
@@ -215,7 +220,7 @@ export class NoteItem extends vscode.TreeItem {
 
     async showPreview(logger: vscode.OutputChannel): Promise<void> {
 
-        this.writeToTempFile(logger).then(async uri => {
+        await this.writeToTempFile(logger).then(async uri => {
             vscode.commands.executeCommand("markdown.showPreview", uri);
         });
     }
@@ -223,7 +228,7 @@ export class NoteItem extends vscode.TreeItem {
     async openEditor(logger: vscode.OutputChannel): Promise<void> {
         logger.appendLine(`editing note ${this.label}`);
 
-        this.writeToTempFile(logger).then(async uri => {
+        await this.writeToTempFile(logger).then(async uri => {
             await vscode.commands.executeCommand('vscode.open', uri);
             // await vscode.commands.executeCommand('cursorBottom');
 
@@ -248,7 +253,7 @@ export class NoteItem extends vscode.TreeItem {
     async saveNote(textDocument: vscode.TextDocument, logger: vscode.OutputChannel): Promise<void> {
         logger.appendLine(`saving note ${this.label}`);
         const content = await textDocument.getText();
-        this.content = await encode(content, logger);
+        this.content = await encodeAsync(content, logger);
         this.owner.saveToConfig();
     }
 }

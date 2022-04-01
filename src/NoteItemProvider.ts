@@ -53,6 +53,8 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
         return rootNodesArray;
     }
 
+    // TODO implement drag and drop once API allows us to
+
     // public async handleDrop(target: NoteItem | undefined, sources: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
 	// 	const transferItem = sources.get('application/vnd.code.tree.syncednotes-explorer');
 	// 	if (!transferItem) {
@@ -107,7 +109,8 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
     async selectNoteFromList(title: string): Promise<NoteItem | undefined> {
 
-        const rootFolders = this.data.filter(note => note.isFolder && !note.folderIsEmpty && note.containsTextNoteRecursive());
+        let rootFolders = this.data.filter(note => note.isFolder && !note.folderIsEmpty && note.containsTextNoteRecursive());
+        rootFolders = rootFolders.concat(this.data.filter(note => !note.isFolder));
         let selected = await this.showQuickPick(rootFolders, title);
         this.logger.appendLine(`selected: ${selected}`);
 
@@ -133,17 +136,23 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
     }
 
     async AddNote(parent?: NoteItem): Promise<void> {
-        if (parent === undefined) {
-            const addInRoot = await vscode.window.showWarningMessage(`no folder selected. Add note to root??`, { modal: true }, 'Yes', 'No') === 'Yes';
-            if (!addInRoot) return
-        }
+        // if (parent === undefined) {
+        //     const addInRoot = await vscode.window.showWarningMessage(`no folder selected. Add note to root??`, { modal: true }, 'Yes', 'No') === 'Yes';
+        //     if (!addInRoot) return
+        // }
 
-        const newNoteName = await vscode.window.showInputBox({ prompt: 'Please enter a name for your note' });
+        const newNoteName = await vscode.window.showInputBox({
+            prompt: 'Please enter a name for your note',
+            placeHolder: 'Note name'
+        });
         if (!newNoteName) return;
-        const newFolder = NoteItem.NewNote(newNoteName, this, "");
-        if (parent) parent.addChild(newFolder);
-        else this.data.push(newFolder);
-        this.saveToConfig();
+        const newNote = await NoteItem.NewNote(newNoteName, this, "# This is an empty note");
+        if (parent) parent.addChild(newNote);
+        else this.data.push(newNote);
+
+        await this.saveToConfig();
+
+        newNote.openEditor(this.logger);
     }
 
 
@@ -155,14 +164,14 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
         switch (mode) {
             case folderSelectMode.selectToAddFolder:
-                rootFolders.push(NoteItem.NewTempNote('[NEW FOLDER HERE]', this, 'add folder at this location'));
+                rootFolders.push(NoteItem.NewTempNote('$(add)', this, 'add folder in root directory'));
                 break;
             case folderSelectMode.selectToAddNote:
-                rootFolders.push(NoteItem.NewTempNote('[ADD TO ROOT]', this, 'add note at this location'));
+                rootFolders.push(NoteItem.NewTempNote('$(add)', this, 'add note in root directory'));
                 break;
             case folderSelectMode.selectToMoveFolder:
             case folderSelectMode.selectToMoveNote:
-                rootFolders.push(NoteItem.NewTempNote('MOVE TO ROOT', this, 'move folder to root level'));
+                rootFolders.push(NoteItem.NewTempNote('$(move)', this, 'move folder to root directory'));
                 break;
             default:
                 break;
@@ -199,16 +208,16 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
             switch (mode) {
                 case folderSelectMode.selectToAddFolder:
-                    newOptions.push(NoteItem.NewTempNote('[NEW FOLDER HERE]', this, 'add folder at this location')); oAdd:
+                    newOptions.push(NoteItem.NewTempNote('$(add)', this, 'add folder here'));
                     break;
                 case folderSelectMode.selectToAddNote:
-                    newOptions.push(NoteItem.NewTempNote('[ADD NOTE HERE]', this, 'add note at this location'));
+                    newOptions.push(NoteItem.NewTempNote('$(add)', this, 'add note here'));
                     break;
                 case folderSelectMode.selectToMoveNote:
-                    newOptions.push(NoteItem.NewTempNote('[MOVE TO HERE]', this, 'place note this location')); oAdd:
+                    newOptions.push(NoteItem.NewTempNote('$(move)', this, 'place note here'));
                     break;
                 case folderSelectMode.selectToDelete:
-                    newOptions.push(NoteItem.NewTempNote(`[DELETE ${selected.label}]`, this, 'delete folder at this location'));
+                    newOptions.push(NoteItem.NewTempNote("$(chrome-close)", this, 'delete this folder'));
                     break;
                 default:
                     break;

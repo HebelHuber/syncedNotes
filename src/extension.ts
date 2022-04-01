@@ -9,8 +9,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     //Create output channel
     const logger = vscode.window.createOutputChannel("synced notes");
-    logger.show();
-    logger.appendLine("I am a banana.");
+    // logger.show();
 
     const provider = new NoteItemProvider(logger)
 
@@ -35,6 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
     // X syncedNotes.addNote
     // X syncedNotes.showNote
     // X syncedNotes.editNote
+    // o syncedNotes.renameNote
     // X syncedNotes.moveNote
     // X syncedNotes.deleteNote
 
@@ -62,15 +62,24 @@ export function activate(context: vscode.ExtensionContext) {
         note.showPreview(logger);
     });
 
+    vscode.commands.registerCommand('syncedNotes.renameNote', async (note?: NoteItem) => {
+
+        if (note === undefined)
+            note = await provider.selectNoteFromList('select note to rename');
+
+        if (note === undefined)
+            return;
+
+        note.rename();
+    });
+
     vscode.commands.registerCommand('syncedNotes.editNote', async (note?: NoteItem) => {
 
         if (note === undefined)
             note = await provider.selectNoteFromList('select note to edit');
 
-        if (note === undefined || note.isFolder) {
-            vscode.window.showErrorMessage("No note selected");
+        if (note === undefined)
             return;
-        }
 
         note.openEditor(logger);
     });
@@ -123,12 +132,10 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('syncedNotes.renameFolder', async (selected?: NoteItem) => {
 
         if (selected === undefined)
-            selected = await provider.selectFolderFromList('Select folder to remove', folderSelectMode.justSelect);
+            selected = await provider.selectFolderFromList('Select folder to rename', folderSelectMode.justSelect);
 
         if (selected !== undefined) {
-            const newFolderName = await vscode.window.showInputBox({ prompt: 'Please enter a folder for your note' });
-            if (!newFolderName) return;
-            selected.rename(newFolderName);
+            selected.rename();
         }
     });
 

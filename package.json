@@ -27,70 +27,76 @@
 				{
 					"id": "syncednotes-explorer",
 					"name": "Synced Notes",
-					"icon": "./resources/dep.svg"
+					"icon": "$(notebook)"
 				}
 			]
 		},
 		"commands": [
 			{
 				"command": "syncedNotes.refreshNoteView",
-				"title": "refresh synced notes view",
+				"title": "refresh Note list",
 				"category": "syncedNotes",
 				"icon": "$(refresh)"
 			},
 			{
 				"command": "syncedNotes.addNote",
-				"title": "add synced note",
+				"title": "add Note",
 				"category": "syncedNotes",
 				"icon": "$(new-file)"
 			},
 			{
 				"command": "syncedNotes.showNote",
-				"title": "show sycned note",
+				"title": "show Note",
 				"category": "syncedNotes",
 				"icon": "$(eye)"
 			},
 			{
 				"command": "syncedNotes.editNote",
-				"title": "edit synced note",
+				"title": "edit Note",
 				"category": "syncedNotes",
 				"icon": "$(pencil)"
 			},
 			{
 				"command": "syncedNotes.moveNote",
-				"title": "move synced note",
+				"title": "move Note",
 				"category": "syncedNotes",
 				"icon": "$(move)"
 			},
 			{
-				"command": "syncedNotes.deleteNote",
-				"title": "delete sycned note",
+				"command": "syncedNotes.renameNote",
+				"title": "rename Note",
 				"category": "syncedNotes",
-				"icon": "$(trash)"
+				"icon": "$(whitespace)"
+			},
+			{
+				"command": "syncedNotes.deleteNote",
+				"title": "delete Note",
+				"category": "syncedNotes",
+				"icon": "$(chrome-close)"
 			},
 			{
 				"command": "syncedNotes.addFolder",
-				"title": "add synced notes folder",
+				"title": "add Folder",
 				"category": "syncedNotes",
 				"icon": "$(new-folder)"
 			},
 			{
 				"command": "syncedNotes.renameFolder",
-				"title": "rename synced notes folder",
+				"title": "rename Folder",
 				"category": "syncedNotes",
-				"icon": "$(pencil)"
+				"icon": "$(whitespace)"
 			},
 			{
 				"command": "syncedNotes.moveFolder",
-				"title": "rename synced notes folder",
+				"title": "move Folder",
 				"category": "syncedNotes",
 				"icon": "$(move)"
 			},
 			{
 				"command": "syncedNotes.deleteFolder",
-				"title": "remove synced notes Folder",
+				"title": "delete Folder",
 				"category": "syncedNotes",
-				"icon": "$(trash)"
+				"icon": "$(chrome-close)"
 			}
 		],
 		"menus": {
@@ -114,49 +120,109 @@
 			"view/item/context": [
 				{
 					"command": "syncedNotes.editNote",
-					"group": "inline",
+					"group": "inline@100",
 					"when": "view == syncednotes-explorer && viewItem == note",
 					"args": "viewItem"
 				},
 				{
-					"command": "syncedNotes.deleteNote",
-					"group": "inline",
+					"command": "syncedNotes.renameNote",
+					"group": "inline@200",
 					"when": "view == syncednotes-explorer && viewItem == note",
 					"args": "viewItem"
 				},
 				{
 					"command": "syncedNotes.moveNote",
-					"group": "inline",
+					"group": "inline@300",
 					"when": "view == syncednotes-explorer && viewItem == note",
 					"args": "viewItem"
 				},
 				{
-					"command": "syncedNotes.renameFolder",
-					"group": "inline",
-					"when": "view == syncednotes-explorer && viewItem == folder",
+					"command": "syncedNotes.deleteNote",
+					"group": "inline@400",
+					"when": "view == syncednotes-explorer && viewItem == note",
 					"args": "viewItem"
 				},
 				{
 					"command": "syncedNotes.addNote",
-					"group": "inline",
-					"when": "view == syncednotes-explorer && viewItem == folder",
-					"args": "viewItem"
-				},
-				{
-					"command": "syncedNotes.deleteFolder",
-					"group": "inline",
-					"when": "view == syncednotes-explorer && viewItem == folder",
-					"args": "viewItem"
-				},
-				{
-					"command": "syncedNotes.moveFolder",
-					"group": "inline",
+					"group": "inline@100",
 					"when": "view == syncednotes-explorer && viewItem == folder",
 					"args": "viewItem"
 				},
 				{
 					"command": "syncedNotes.addFolder",
-					"group": "inline",
+					"group": "inline@200",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.renameFolder",
+					"group": "inline@300",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.moveFolder",
+					"group": "inline@400",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.deleteFolder",
+					"group": "inline@500",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.editNote",
+					"group": "contextmenu@100",
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.renameNote",
+					"group": "contextmenu@200",
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.moveNote",
+					"group": "contextmenu@300",
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.deleteNote",
+					"group": "contextmenu@400",
+					"when": "view == syncednotes-explorer && viewItem == note",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.addNote",
+					"group": "contextmenu@100",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.addFolder",
+					"group": "contextmenu@200",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.renameFolder",
+					"group": "contextmenu@300",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.moveFolder",
+					"group": "contextmenu@400",
+					"when": "view == syncednotes-explorer && viewItem == folder",
+					"args": "viewItem"
+				},
+				{
+					"command": "syncedNotes.deleteFolder",
+					"group": "contextmenu@500",
 					"when": "view == syncednotes-explorer && viewItem == folder",
 					"args": "viewItem"
 				}
