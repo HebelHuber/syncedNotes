@@ -1,10 +1,10 @@
 {
-	"name": "vscode-notes",
+	"name": "vscode-sync-notes",
 	"displayName": "Synced Notes",
 	"description": "Extension to edit, view and sync notes in vscode",
 	"publisher": "HebelHuber",
 	"qna": "marketplace",
-	"homepage": "https://github.com/HebelHuber/git-angular/tree/Notes-Sync",
+	"homepage": "https://github.com/HebelHuber/syncedNotes",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.41.0"
@@ -14,7 +14,7 @@
 	],
 	"license": "MIT",
 	"repository": {
-		"url": "https://github.com/HebelHuber/git-angular/tree/Notes-Sync.git",
+		"url": "https://github.com/HebelHuber/syncedNotes.git",
 		"type": "git"
 	},
 	"activationEvents": [
@@ -267,13 +267,13 @@
 		"@typescript-eslint/parser": "^2.16.0",
 		"eslint": "^6.8.0",
 		"glob": "^7.1.5",
+		"lzutf8": "0.6.1",
 		"mocha": "^6.2.2",
 		"standard-version": "^7.0.1",
-		"typescript": "^3.7.5",
-		"vscode-test": "^1.2.2",
-		"vsce": "^2.6.7",
-		"yarn": "^1.22.17",
 		"temp": "0.9.4",
-		"lzutf8": "0.6.1"
+		"typescript": "^3.7.5",
+		"vsce": "^2.7.0",
+		"vscode-test": "^1.2.2",
+		"yarn": "^1.22.17"
 	}
 }

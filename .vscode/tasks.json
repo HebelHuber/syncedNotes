@@ -92,7 +92,7 @@
 		{
 			"type": "shell",
 			"command": "./node_modules/.bin/vsce unpublish",
-			"label": "vsce unpublish HebelHuber.git-angular-commits",
+			"label": "vsce unpublish HebelHuber.vscode-sync-notes",
 		}
 	]
 }
