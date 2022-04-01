@@ -19,7 +19,6 @@
 	},
 	"activationEvents": [
 		"onView:syncednotes-explorer",
-		"onStartupFinished",
 		"onCommand:syncedNotes.refreshNoteView",
 		"onCommand:syncedNotes.addNote",
 		"onCommand:syncedNotes.showNote",

@@ -13,6 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
     logger.appendLine("synced notes extension activated");
 
     const provider = new NoteItemProvider(logger)
+    vscode.window.registerTreeDataProvider('syncednotes-explorer', provider);
 
     // add in a subscription to workspace config changes
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
@@ -25,32 +26,30 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }));
 
-    vscode.window.registerTreeDataProvider('syncednotes-explorer', provider);
-
-    vscode.commands.registerCommand('syncedNotes.refreshNoteView', () => provider.loadFromConfig());
-
     // X syncedNotes.refreshNoteView
-
+    
     // X syncedNotes.addNote
     // X syncedNotes.showNote
     // X syncedNotes.editNote
     // o syncedNotes.renameNote
     // X syncedNotes.moveNote
     // X syncedNotes.deleteNote
-
+    
     // X syncedNotes.addFolder
     // X syncedNotes.renameFolder
     // X syncedNotes.moveFolder
     // X syncedNotes.deleteFolder
 
-    vscode.commands.registerCommand('syncedNotes.addNote', async (selectedFolder?: NoteItem) => {
+    context.subscriptions.push(vscode.commands.registerCommand('syncedNotes.refreshNoteView', () => provider.loadFromConfig()));
+
+    context.subscriptions.push(vscode.commands.registerCommand('syncedNotes.addNote', async (selectedFolder?: NoteItem) => {
         if (selectedFolder === undefined)
             await provider.selectFolderFromList('Select folder for note', folderSelectMode.selectToAddNote);
         else
             provider.AddNote(selectedFolder);
-    });
+    }));
 
-    vscode.commands.registerCommand('syncedNotes.showNote', async (note?: NoteItem) => {
+    context.subscriptions.push(vscode.commands.registerCommand('syncedNotes.showNote', async (note?: NoteItem) => {
 
         if (note === undefined)
             note = await provider.selectNoteFromList('select note to show');
@@ -60,9 +59,9 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         note.showPreview(logger);
-    });
+    }));
 
-    vscode.commands.registerCommand('syncedNotes.renameNote', async (note?: NoteItem) => {
+    context.subscriptions.push(vscode.commands.registerCommand('syncedNotes.renameNote', async (note?: NoteItem) => {
 
         if (note === undefined)
             note = await provider.selectNoteFromList('select note to rename');
@@ -71,9 +70,9 @@ export function activate(context: vscode.ExtensionContext) {
             return;
 
         note.rename();
-    });
+    }));
 
-    vscode.commands.registerCommand('syncedNotes.editNote', async (note?: NoteItem) => {
+    context.subscriptions.push(vscode.commands.registerCommand('syncedNotes.editNote', async (note?: NoteItem) => {
 
         if (note === undefined)
             note = await provider.selectNoteFromList('select note to edit');
@@ -82,9 +81,9 @@ export function activate(context: vscode.ExtensionContext) {
             return;
 
         note.openEditor(logger);
-    });
+    }));
 
-    vscode.commands.registerCommand('syncedNotes.moveNote', async (selected?: NoteItem) => {
+    context.subscriptions.push(vscode.commands.registerCommand('syncedNotes.moveNote', async (selected?: NoteItem) => {
         if (selected === undefined)
             selected = await provider.selectNoteFromList('select note to move');
 
@@ -109,9 +108,9 @@ export function activate(context: vscode.ExtensionContext) {
 
         provider.saveToConfig();
 
-    });
+    }));
 
-    vscode.commands.registerCommand('syncedNotes.deleteNote', async (selected?: NoteItem) => {
+    context.subscriptions.push(vscode.commands.registerCommand('syncedNotes.deleteNote', async (selected?: NoteItem) => {
         if (selected === undefined)
             selected = await provider.selectNoteFromList('select note to delete');
 
@@ -119,17 +118,17 @@ export function activate(context: vscode.ExtensionContext) {
             return;
 
         selected.deleteNote();
-    });
+    }));
 
-    vscode.commands.registerCommand('syncedNotes.addFolder', async (parentNote?: NoteItem) => {
+    context.subscriptions.push(vscode.commands.registerCommand('syncedNotes.addFolder', async (parentNote?: NoteItem) => {
 
         if (parentNote === undefined)
             await provider.selectFolderFromList('Select parent folder', folderSelectMode.selectToAddFolder);
         else
             provider.AddFolder(parentNote);
-    });
+    }));
 
-    vscode.commands.registerCommand('syncedNotes.renameFolder', async (selected?: NoteItem) => {
+    context.subscriptions.push(vscode.commands.registerCommand('syncedNotes.renameFolder', async (selected?: NoteItem) => {
 
         if (selected === undefined)
             selected = await provider.selectFolderFromList('Select folder to rename', folderSelectMode.justSelect);
@@ -137,9 +136,9 @@ export function activate(context: vscode.ExtensionContext) {
         if (selected !== undefined) {
             selected.rename();
         }
-    });
+    }));
 
-    vscode.commands.registerCommand('syncedNotes.moveFolder', async (selected?: NoteItem) => {
+    context.subscriptions.push(vscode.commands.registerCommand('syncedNotes.moveFolder', async (selected?: NoteItem) => {
 
         if (selected === undefined)
             selected = await provider.selectFolderFromList('Select folder to move', folderSelectMode.justSelect);
@@ -163,14 +162,14 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         provider.saveToConfig();
-    });
+    }));
 
-    vscode.commands.registerCommand('syncedNotes.deleteFolder', async (selected?: NoteItem) => {
+    context.subscriptions.push(vscode.commands.registerCommand('syncedNotes.deleteFolder', async (selected?: NoteItem) => {
 
         if (selected === undefined)
             await provider.selectFolderFromList('Select folder to remove', folderSelectMode.selectToDelete);
         else
             selected.deleteNote();
-    });
+    }));
 }
 
