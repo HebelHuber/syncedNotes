@@ -2,14 +2,8 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 
 import * as vscode from 'vscode';
-import { decode, encode } from './encoding';
 import { NoteItem } from './NoteItem';
-import { NoteItemProvider } from './NoteItemProvider';
-import * as path from 'path';
-import * as os from 'os';
-import * as fs from 'fs';
-
-let lastOpenedNote: vscode.TextDocument;
+import { NoteItemProvider, folderSelectMode } from './NoteItemProvider';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -32,50 +26,36 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }));
 
-    vscode.commands.registerCommand('syncedNotes.refreshNoteView', () => provider.loadFromConfig());
     vscode.window.registerTreeDataProvider('syncednotes-explorer', provider);
 
-    // add folder: ask for folder name, compare with existing
-    vscode.commands.registerCommand('syncedNotes.addFolder', async () => {
+    vscode.commands.registerCommand('syncedNotes.refreshNoteView', () => provider.loadFromConfig());
 
-        const parentFolder = await provider.selectFolderFromList('Select parent folder', true);
+    // X syncedNotes.refreshNoteView
 
-        if (!parentFolder) {
-            logger.appendLine("No parent folder selected");
-            return;
-        }
-        else {
-            logger.appendLine(`parent folder: ${parentFolder.label}`);
-        }
+    // X syncedNotes.addNote
+    // X syncedNotes.showNote
+    // X syncedNotes.editNote
+    // X syncedNotes.moveNote
+    // X syncedNotes.deleteNote
 
+    // X syncedNotes.addFolder
+    // X syncedNotes.renameFolder
+    // X syncedNotes.moveFolder
+    // X syncedNotes.deleteFolder
 
-        // const newFolderName = await vscode.window.showInputBox({
-        //     prompt: 'Please enter a folder for your note'
-        // }) as string;
-
-        // const config = await vscode.workspace.getConfiguration('syncedNotes');
-        // const existingFolders = config.notes;
-
-        // if (newFolderName in existingFolders) {
-        //     vscode.window.showErrorMessage(`Folder ${newFolderName} already exists`);
-        //     return;
-        // }
-
-        // const newFolders = {};
-        // Object.assign(newFolders, existingFolders, { [newFolderName]: {} });
-
-        // await config.update('notes', newFolders, vscode.ConfigurationTarget.Global);
-        provider._onDidChangeTreeData.fire();
+    vscode.commands.registerCommand('syncedNotes.addNote', async (selectedFolder?: NoteItem) => {
+        if (selectedFolder === undefined)
+            await provider.selectFolderFromList('Select folder for note', folderSelectMode.selectToAddNote);
+        else
+            provider.AddNote(selectedFolder);
     });
 
     vscode.commands.registerCommand('syncedNotes.showNote', async (note?: NoteItem) => {
 
-        logger.appendLine(`showNote: ${note?.label}`);
-
-        if (note === undefined) note = await provider.selectNoteFromList('select note to show');
+        if (note === undefined)
+            note = await provider.selectNoteFromList('select note to show');
 
         if (note === undefined || note.isFolder) {
-            vscode.window.showErrorMessage("No note selected");
             return;
         }
 
@@ -84,7 +64,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     vscode.commands.registerCommand('syncedNotes.editNote', async (note?: NoteItem) => {
 
-        if (note === undefined) note = await provider.selectNoteFromList('select note to edit');
+        if (note === undefined)
+            note = await provider.selectNoteFromList('select note to edit');
 
         if (note === undefined || note.isFolder) {
             vscode.window.showErrorMessage("No note selected");
@@ -94,40 +75,95 @@ export function activate(context: vscode.ExtensionContext) {
         note.openEditor(logger);
     });
 
-    vscode.commands.registerCommand('syncedNotes.removeFolder', async (folderItem?: NoteItem) => {
+    vscode.commands.registerCommand('syncedNotes.moveNote', async (selected?: NoteItem) => {
+        if (selected === undefined)
+            selected = await provider.selectNoteFromList('select note to move');
 
-        const config = await vscode.workspace.getConfiguration('syncedNotes');
-        let selectedFolderName: string;
+        if (selected === undefined)
+            return;
 
-        if (folderItem === undefined) {
 
-            const folderNameOptions = Object.entries(config.notes).map(([name, value]) => { return { label: name, description: name } });
+        const targetParent = await provider.selectFolderFromList('Select target folder', folderSelectMode.selectToMoveNote, selected);
 
-            const selectedOption = await vscode.window.showQuickPick(folderNameOptions, {
-                placeHolder: 'Select a folder to delete'
-            });
+        // nothing selected
+        if (!targetParent) return;
 
-            if (selectedOption === undefined)
-                return
-
-            selectedFolderName = selectedOption.label as string;
+        // selected "move to root"
+        if (targetParent.isTempNote) {
+            if (!selected.isInRoot)
+                selected.moveToRoot();
         }
         else {
-            selectedFolderName = folderItem.label as string;
+            // selected a folder
+            selected.parentTo(targetParent);
         }
 
-        // check if folder is empty. If not, show a warning message
-        if (Object.entries(config.notes[selectedFolderName]).length > 0) {
-            const deleteFolder = await vscode.window.showWarningMessage(`Folder ${selectedFolderName} is not empty. Are you sure you want to delete it?`, { modal: true }, 'Yes', 'No');
-            if (!deleteFolder || deleteFolder === 'No') return;
+        provider.saveToConfig();
+
+    });
+
+    vscode.commands.registerCommand('syncedNotes.deleteNote', async (selected?: NoteItem) => {
+        if (selected === undefined)
+            selected = await provider.selectNoteFromList('select note to delete');
+
+        if (selected === undefined)
+            return;
+
+        selected.deleteNote();
+    });
+
+    vscode.commands.registerCommand('syncedNotes.addFolder', async (parentNote?: NoteItem) => {
+
+        if (parentNote === undefined)
+            await provider.selectFolderFromList('Select parent folder', folderSelectMode.selectToAddFolder);
+        else
+            provider.AddFolder(parentNote);
+    });
+
+    vscode.commands.registerCommand('syncedNotes.renameFolder', async (selected?: NoteItem) => {
+
+        if (selected === undefined)
+            selected = await provider.selectFolderFromList('Select folder to remove', folderSelectMode.justSelect);
+
+        if (selected !== undefined) {
+            const newFolderName = await vscode.window.showInputBox({ prompt: 'Please enter a folder for your note' });
+            if (!newFolderName) return;
+            selected.rename(newFolderName);
+        }
+    });
+
+    vscode.commands.registerCommand('syncedNotes.moveFolder', async (selected?: NoteItem) => {
+
+        if (selected === undefined)
+            selected = await provider.selectFolderFromList('Select folder to move', folderSelectMode.justSelect);
+
+        if (selected === undefined)
+            return;
+
+        const targetParent = await provider.selectFolderFromList('Select target folder', folderSelectMode.selectToMoveFolder, selected);
+
+        // nothing selected
+        if (!targetParent) return;
+
+        // selected "move to root"
+        if (targetParent.isTempNote) {
+            if (!selected.isInRoot)
+                selected.moveToRoot();
+        }
+        else {
+            // selected a folder
+            selected.parentTo(targetParent);
         }
 
-        const newFolders = Object.assign({}, ...
-            Object.entries(config.notes).filter(([name, content]) => name !== selectedFolderName).map(([name, content]) => ({ [name]: content }))
-        );
+        provider.saveToConfig();
+    });
 
-        await config.update('notes', newFolders, vscode.ConfigurationTarget.Global);
-        provider._onDidChangeTreeData.fire();
+    vscode.commands.registerCommand('syncedNotes.deleteFolder', async (selected?: NoteItem) => {
+
+        if (selected === undefined)
+            await provider.selectFolderFromList('Select folder to remove', folderSelectMode.selectToDelete);
+        else
+            selected.deleteNote();
     });
 }
 

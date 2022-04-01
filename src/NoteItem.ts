@@ -4,39 +4,61 @@ import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
 import { NoteItemProvider } from './NoteItemProvider';
+// import { inspect } from 'util' 
+import * as util from 'util'
 
 export class NoteItem extends vscode.TreeItem {
-    children: NoteItem[] | undefined;
-    content: string | undefined;
-    fullPath: string;
     command?: vscode.Command | undefined;
-    owner: NoteItemProvider;
     iconPath?: string | vscode.Uri | { light: string | vscode.Uri; dark: string | vscode.Uri } | vscode.ThemeIcon | undefined;
-    isFolder = true;
-    hasChildren = false;
-    isEmptyFolder = false;
-    hasSubFolders = false;
 
+    owner: NoteItemProvider;
+    content?: string | undefined;
+    parent?: NoteItem | undefined;
+    children?: NoteItem[] | undefined;
 
-    constructor(label: string, fullPath: string, owner: NoteItemProvider, content?: string, children?: NoteItem[]) {
+    isTempNote = false;
+    optionalDescription?: string;
+    optionalDetail?: string;
+
+    public get isFolder(): boolean { return this.children !== undefined; }
+    public get folderHasChildren(): boolean { return this.children !== undefined && this.children.length > 0 };
+    public get folderIsEmpty(): boolean { return this.children !== undefined && this.children.length == 0 };
+    public get subFolders(): NoteItem[] { return this.children !== undefined ? this.children.filter(child => child.isFolder) : [] };
+    public get hasSubFolders(): boolean { return this.subFolders.length > 0; };
+    public get isInRoot(): boolean { return this.parent === undefined; }
+
+    static NewFolder(label: string, owner: NoteItemProvider): NoteItem {
+        return new NoteItem(label, owner, undefined, []);
+    }
+
+    static NewNote(label: string, owner: NoteItemProvider, content: string): NoteItem {
+        return new NoteItem(label, owner, content);
+    }
+
+    static NewTempNote(label: string, owner: NoteItemProvider, optionalDescription?: string, optionalDetail?: string): NoteItem {
+        const item = new NoteItem(label, owner);
+        item.isTempNote = true;
+        item.optionalDescription = optionalDescription;
+        item.optionalDetail = optionalDetail;
+        return item;
+    }
+
+    private constructor(label: string, owner: NoteItemProvider, content?: string, children?: NoteItem[]) {
         super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Collapsed);
         this.children = children;
         this.content = content;
-        this.fullPath = fullPath;
         this.owner = owner;
+
+        if (children !== undefined)
+            children.forEach(child => child.parent = this);
 
         this.updateItemState();
     }
 
-    updateItemState(): void {
+    updateItemState(logJSON?: boolean): void {
 
-        this.isFolder = this.children !== undefined;
-        this.hasChildren = this.children !== undefined && this.children.length > 0;
-        this.isEmptyFolder = this.isFolder && !this.hasChildren;
-        this.hasSubFolders = this.children !== undefined && this.children.filter(child => child.isFolder).length > 0;
         this.contextValue = this.isFolder ? 'folder' : 'note';
         this.iconPath = this.isFolder ? vscode.ThemeIcon.Folder : vscode.ThemeIcon.File;
-
         this.collapsibleState = this.isFolder ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
 
         this.command = this.isFolder ? undefined : {
@@ -44,6 +66,9 @@ export class NoteItem extends vscode.TreeItem {
             command: "syncedNotes.showNote",
             arguments: [this]
         };
+
+        if (logJSON)
+            this.owner.logger.appendLine(`note data: ${util.inspect(this)}`);
     }
 
     // getTooltip(): string {
@@ -55,12 +80,57 @@ export class NoteItem extends vscode.TreeItem {
             this.children = [];
 
         this.children.push(child);
+        child.parent = this;
+        child.updateItemState();
         this.updateItemState();
+    }
+
+    removeChild(child: NoteItem): void {
+        if (this.children === undefined) return;
+        this.children = this.children.filter(item => item !== child);
+
+        child.updateItemState();
+        this.updateItemState();
+    }
+
+    parentTo(newParent: NoteItem): void {
+        if (this.parent) this.parent.removeChild(this);
+        else this.owner.data = this.owner.data.filter(item => item !== this);
+        newParent.addChild(this);
+    }
+
+    moveToRoot(): void {
+        if (this.parent) this.parent.removeChild(this);
+        this.owner.data.push(this);
+        this.updateItemState();
+        this.owner.saveToConfig();
+    }
+
+    rename(newLabel: string): void {
+        this.label = newLabel;
+        this.updateItemState();
+        this.owner.saveToConfig();
+    }
+
+    async deleteNote(): Promise<void> {
+
+        this.owner.logger.appendLine(`deleting note: ${this.label}`);
+
+        if (this.folderHasChildren) {
+            const reallyDelete = await vscode.window.showWarningMessage(`Folder ${this.label} is not empty. Are you sure you want to delete it?`, { modal: true }, 'Yes', 'No') === 'Yes';
+            if (!reallyDelete) return
+        }
+
+        if (this.parent)
+            this.parent.removeChild(this);
+        else
+            this.owner.data = this.owner.data.filter(item => item !== this);
+
+        this.owner.saveToConfig();
     }
 
     getTempFileName(): string {
         return this.label as string + ".md";
-        // return this.fullPath.replace(/\//g, '_');
     }
 
     getChildren(includeNotes: boolean, includeFolders: boolean, includeEmptyFolders: boolean): NoteItem[] {
@@ -70,17 +140,17 @@ export class NoteItem extends vscode.TreeItem {
         if (includeNotes && includeFolders && includeEmptyFolders)
             return this.children;
         if (includeNotes && includeFolders && !includeEmptyFolders)
-            return this.children.filter(child => !child.isEmptyFolder);
+            return this.children.filter(child => !child.folderIsEmpty);
 
         if (includeNotes && !includeFolders && includeEmptyFolders)
             return this.children.filter(child => !child.isFolder);
         if (includeNotes && !includeFolders && !includeEmptyFolders)
-            return this.children.filter(child => !child.isFolder && !child.isEmptyFolder);
+            return this.children.filter(child => !child.isFolder && !child.folderIsEmpty);
 
         if (!includeNotes && includeFolders && includeEmptyFolders)
             return this.children.filter(child => child.isFolder);
         if (!includeNotes && includeFolders && !includeEmptyFolders)
-            return this.children.filter(child => child.isFolder && !child.isEmptyFolder);
+            return this.children.filter(child => child.isFolder && !child.folderIsEmpty);
 
         return [];
     }
@@ -104,10 +174,13 @@ export class NoteItem extends vscode.TreeItem {
     getJson(): string {
 
         // I'm a folder
-        if (this.isFolder)
+        if (this.isFolder) {
+            // this.owner.logger.appendLine(`${this.label} is a folder`);
             return `{"${this.label}":[${this.children?.map(child => child.getJson()).join(',')}]}`;
+        }
 
         // I'm a leaf
+        // this.owner.logger.appendLine(`${this.label} is a leaf`);
         return `{"${this.label}" : "${this.content}"}`;
     }
 
@@ -120,7 +193,7 @@ export class NoteItem extends vscode.TreeItem {
     //     return children;
     // }
 
-    async decodedContent(truncateTo?: number): Promise<string> {
+    async decodedContentAsync(truncateTo?: number): Promise<string> {
         const decoded = await decode(this.content as string);
 
         if (truncateTo)
@@ -133,7 +206,7 @@ export class NoteItem extends vscode.TreeItem {
         const tempFilePath = path.join(os.tmpdir(), this.getTempFileName());
         logger.appendLine(`temp file: ${tempFilePath}`);
 
-        await fs.writeFile(tempFilePath, await this.decodedContent(), (err) => {
+        await fs.writeFile(tempFilePath, await this.decodedContentAsync(), (err) => {
             if (err) logger.appendLine(`Error writing file: ${tempFilePath}, ${err}`);
         });
 
