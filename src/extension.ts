@@ -65,7 +65,7 @@ export function activate(context: vscode.ExtensionContext) {
             return;
         }
 
-        note.showPreview(logger);
+        note.showPreview();
     });
 
     const renameNoteCommand = vscode.commands.registerCommand('syncedNotes.renameNote', async (note?: NoteItem) => {
@@ -87,7 +87,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (note === undefined)
             return;
 
-        note.openEditor(logger);
+        note.openEditor();
     });
 
     const moveNoteCommand = vscode.commands.registerCommand('syncedNotes.moveNote', async (selected?: NoteItem) => {
@@ -106,7 +106,7 @@ export function activate(context: vscode.ExtensionContext) {
         // selected "move to root"
         if (targetParent.isTempNote) {
             if (!selected.isInRoot)
-                selected.moveToRoot();
+                selected.moveToRoot(false);
         }
         else {
             // selected a folder
@@ -160,7 +160,7 @@ export function activate(context: vscode.ExtensionContext) {
         // selected "move to root"
         if (targetParent.isTempNote) {
             if (!selected.isInRoot)
-                selected.moveToRoot();
+                selected.moveToRoot(false);
         }
         else {
             // selected a folder

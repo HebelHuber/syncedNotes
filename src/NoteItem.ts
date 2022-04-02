@@ -19,6 +19,7 @@ export class NoteItem extends vscode.TreeItem {
     isTempNote = false;
     optionalDescription?: string;
     optionalDetail?: string;
+    logger: vscode.OutputChannel;
 
     public get isFolder(): boolean { return this.children !== undefined; }
     public get folderHasChildren(): boolean { return this.children !== undefined && this.children.length > 0 };
@@ -27,24 +28,25 @@ export class NoteItem extends vscode.TreeItem {
     public get hasSubFolders(): boolean { return this.subFolders.length > 0; };
     public get isInRoot(): boolean { return this.parent === undefined; }
 
-    static NewFolder(label: string, owner: NoteItemProvider): NoteItem {
-        return new NoteItem(label, owner, undefined, []);
+    static NewFolder(label: string, owner: NoteItemProvider, logger: vscode.OutputChannel): NoteItem {
+        return new NoteItem(label, owner, logger, undefined, []);
     }
 
-    static NewNote(label: string, owner: NoteItemProvider, content: string): NoteItem {
-        return new NoteItem(label, owner, encode(content));
+    static NewNote(label: string, owner: NoteItemProvider, content: string, logger: vscode.OutputChannel): NoteItem {
+        return new NoteItem(label, owner, logger, content);
     }
 
-    static NewTempNote(label: string, owner: NoteItemProvider, optionalDescription?: string, optionalDetail?: string): NoteItem {
-        const item = new NoteItem(label, owner);
+    static NewTempNote(label: string, owner: NoteItemProvider, logger: vscode.OutputChannel, optionalDescription?: string, optionalDetail?: string): NoteItem {
+        const item = new NoteItem(label, owner, logger);
         item.isTempNote = true;
         item.optionalDescription = optionalDescription;
         item.optionalDetail = optionalDetail;
         return item;
     }
 
-    private constructor(label: string, owner: NoteItemProvider, contentEncoded?: string, children?: NoteItem[]) {
+    private constructor(label: string, owner: NoteItemProvider, logger: vscode.OutputChannel, contentEncoded?: string, children?: NoteItem[]) {
         super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Collapsed);
+        this.logger = logger;
         this.children = children;
         this.contentEndcoded = contentEncoded;
         this.owner = owner;
@@ -53,6 +55,10 @@ export class NoteItem extends vscode.TreeItem {
             children.forEach(child => child.parent = this);
 
         this.updateItemState();
+    }
+
+    log(message: string): void {
+        this.logger.appendLine(`[ITEM] ${message}`);
     }
 
     updateItemState(logJSON?: boolean): void {
@@ -68,7 +74,7 @@ export class NoteItem extends vscode.TreeItem {
         };
 
         if (logJSON)
-            this.owner.logger.appendLine(`note data: ${util.inspect(this)}`);
+            this.log(`note data: ${util.inspect(this)}`);
     }
 
     // getTooltip(): string {
@@ -99,27 +105,30 @@ export class NoteItem extends vscode.TreeItem {
         newParent.addChild(this);
     }
 
-    moveToRoot(): void {
+    moveToRoot(saveConfig: boolean): void {
         if (this.parent) this.parent.removeChild(this);
+        if (this.owner.data.includes(this)) this.owner.data = this.owner.data.filter(item => item !== this);
         this.owner.data.push(this);
         this.updateItemState();
-        this.owner.saveToConfig();
+
+        if (saveConfig) this.owner.saveToConfig();
     }
 
-    async rename(): Promise<void> {
-        const newName = await vscode.window.showInputBox({
+    rename(): void {
+        vscode.window.showInputBox({
             prompt: 'enter new name',
             placeHolder: this.label as string,
+        }).then(newName => {
+            if (!newName) return;
+            this.label = newName;
+            this.updateItemState();
+            this.owner.saveToConfig();
         });
-        if (!newName) return;
-        this.label = newName;
-        this.updateItemState();
-        this.owner.saveToConfig();
     }
 
     async deleteNote(): Promise<void> {
 
-        this.owner.logger.appendLine(`deleting note: ${this.label}`);
+        this.log(`deleting note: ${this.label}`);
 
         if (this.folderHasChildren) {
             const reallyDelete = await vscode.window.showWarningMessage(`Folder ${this.label} is not empty. Are you sure you want to delete it?`, { modal: true }, 'Yes', 'No') === 'Yes';
@@ -177,18 +186,17 @@ export class NoteItem extends vscode.TreeItem {
     }
 
     toJSON(): any {
+
         const outObj: any = {};
 
-        // I'm a folder
-        if (this.isFolder) {
-            // this.owner.logger.appendLine(`${this.label} is a folder`);
+        if (this.isFolder)
             outObj[this.label as string] = this.children?.map(child => child.toJSON());
-            return outObj;
-            // return `{"${this.label}":[${this.children?.map(child => child.getJson()).join(',')}]}`;
-        }
+        else
+            outObj[this.label as string] = this.contentEndcoded as string;
 
-        // I'm a leaf
-        outObj[this.label as string] = this.contentEndcoded as string;
+        if (!this.isFolder)
+            this.log(`JSON LEAF DATA: ${util.inspect(outObj)}`);
+
         return outObj;
     }
 
@@ -200,56 +208,56 @@ export class NoteItem extends vscode.TreeItem {
         return decode(this.contentEndcoded as string);
     }
 
-    async writeToTempFile(logger: vscode.OutputChannel): Promise<vscode.Uri> {
+    writeToTempFile(): vscode.Uri {
         const tempFilePath = path.join(os.tmpdir(), this.getTempFileName());
-        logger.appendLine(`temp file: ${tempFilePath}`);
+        this.log(`temp file: ${tempFilePath}`);
 
-        await fs.writeFile(tempFilePath, this.decodedContent(), (err) => {
-            if (err) logger.appendLine(`Error writing file: ${tempFilePath}, ${err}`);
-        });
+        const content = this.decodedContent();
+        this.log(`writing content to temp file: ${content}`);
+        try { fs.writeFileSync(tempFilePath, content) }
+        catch (err) { this.log(`Error writing file: ${tempFilePath}, ${err}`); }
 
         return vscode.Uri.file(tempFilePath);
     }
 
-    async showPreview(logger: vscode.OutputChannel): Promise<void> {
+    showPreview(): void {
 
-        await this.writeToTempFile(logger).then(async uri => {
-            vscode.commands.executeCommand("markdown.showPreview", uri);
-        });
+        const uri = this.writeToTempFile();
+        vscode.commands.executeCommand("markdown.showPreview", uri);
     }
 
-    openEditor(logger: vscode.OutputChannel): void {
-        logger.appendLine(`editing note ${this.label}`);
+    openEditor(): void {
+        this.log(`editing note ${this.label}`);
 
-        this.writeToTempFile(logger).then(async uri => {
-            await vscode.commands.executeCommand('vscode.open', uri);
-            // await vscode.commands.executeCommand('cursorBottom');
+        const uri = this.writeToTempFile();
+        // vscode.commands.executeCommand('vscode.open', uri);
+        // await vscode.commands.executeCommand('cursorBottom');
 
-            const onSaveDisposable = vscode.workspace.onDidSaveTextDocument(textDocument => {
+        // vscode.workspace.openTextDocument({ language: 'markdown', content: this.decodedContent() }).then(doc => {
+        vscode.workspace.openTextDocument(uri).then(doc => {
+            vscode.window.showTextDocument(doc);
+
+            const onSaveSubscription = vscode.workspace.onDidSaveTextDocument(textDocument => {
                 if (textDocument.uri.fsPath === uri.fsPath) {
-                    this.saveNote(textDocument.getText(), logger);
+                    const content = textDocument.getText();
+                    this.contentEndcoded = encode(content);
+                    // this.log(`modified <${this.label}>: ${JSON.stringify(this)}`);
+                    this.owner._onDidChangeTreeData.fire(this);
+                    this.owner.saveToConfig();
                 }
-            });
+            }, this);
 
-            const onCloseDisposable = vscode.workspace.onDidCloseTextDocument(textDocument => {
+            const onCloseSubscription = vscode.workspace.onDidCloseTextDocument(textDocument => {
                 if (textDocument.uri.fsPath === uri.fsPath) {
 
-                    onSaveDisposable.dispose();
-                    onCloseDisposable.dispose();
+                    onSaveSubscription.dispose();
+                    onCloseSubscription.dispose();
 
                     fs.unlink(uri.fsPath, (err) => {
-                        if (err) logger.appendLine(`Error deleting file: ${uri.fsPath}, ${err}`);
+                        if (err) this.log(`Error deleting file: ${uri.fsPath}, ${err}`);
                     });
                 }
-            });
+            }, this);
         });
-    }
-
-    saveNote(content: string, logger: vscode.OutputChannel): void {
-        // logger.appendLine(`saving note: ${this.label}`);
-        // const content = text.getText();
-        this.contentEndcoded = encode(content);
-        logger.appendLine(`content of ${this.label}: "${content}" ===IS=NOW===> "${this.contentEndcoded}"`);
-        this.owner.saveToConfig();
     }
 }

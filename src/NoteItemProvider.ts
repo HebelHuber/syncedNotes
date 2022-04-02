@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { encode } from './encoding';
 import { NoteItem } from './NoteItem';
 import { QuickPickNote } from './QuickPickNote';
 
@@ -17,7 +18,7 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
     onDidChangeTreeData: vscode.Event<NoteItem | undefined> = this._onDidChangeTreeData.event;
 
     data: NoteItem[] = [];
-    logger: vscode.OutputChannel;
+    private logger: vscode.OutputChannel;
     debugMode: boolean;
 
     public get rootNotes(): NoteItem[] { return this.data; };
@@ -28,9 +29,14 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
         this.loadFromConfig(true);
     }
 
-    async loadFromConfig(triggerListRefresh: boolean): Promise<void> {
-        if (this.debugMode) this.logger.appendLine('========= Loading from config...');
-        const config = await vscode.workspace.getConfiguration('syncedNotes');
+    log(message: string): void {
+        this.logger.appendLine(`[PROVIDER] ${message}`);
+    }
+
+    loadFromConfig(triggerListRefresh: boolean): void {
+        if (this.debugMode) this.log('========= Loading from config...');
+
+        const config = vscode.workspace.getConfiguration('syncedNotes');
         this.debugMode = config.debugMode;
         this.data = this.getHierarchyRecursive(config.notes, new Array<NoteItem>());
 
@@ -47,15 +53,15 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
                 const content = value[key];
 
                 if (this.debugMode)
-                    this.logger.appendLine(`${name}: ${content}`);
+                    this.log(`${name}: ${content}`);
 
                 if (Array.isArray(content)) {
-                    const folderNode = NoteItem.NewFolder(name, this);
+                    const folderNode = NoteItem.NewFolder(name, this, this.logger);
                     if (parentNode) parentNode.addChild(folderNode);
                     else rootNodesArray.push(folderNode);
                     rootNodesArray.concat(this.getHierarchyRecursive(content, rootNodesArray, folderNode));
                 } else {
-                    const self = NoteItem.NewNote(name, this, content);
+                    const self = NoteItem.NewNote(name, this, content, this.logger);
                     if (parentNode) parentNode.addChild(self);
                     else rootNodesArray.push(self);
                 }
@@ -94,7 +100,6 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
     getChildren(element?: NoteItem | undefined): vscode.ProviderResult<NoteItem[]> {
         if (element === undefined) {
-            this.loadFromConfig(false);
             return this.data;
         }
         return element.children;
@@ -117,7 +122,7 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
         let rootFolders = this.data.filter(note => note.isFolder && !note.folderIsEmpty && note.containsTextNoteRecursive());
         rootFolders = rootFolders.concat(this.data.filter(note => !note.isFolder));
         let selected = await this.showQuickPick(rootFolders, title);
-        this.logger.appendLine(`selected: ${selected}`);
+        this.log(`selected: ${selected}`);
 
         while (selected != undefined) {
             const newOptions = selected.getChildren(true, true, false).filter(note => note.containsTextNoteRecursive());
@@ -134,7 +139,7 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
     async AddFolder(parent?: NoteItem): Promise<void> {
         const newFolderName = await vscode.window.showInputBox({ prompt: 'Please enter a folder for your note' });
         if (!newFolderName) return;
-        const newFolder = NoteItem.NewFolder(newFolderName, this);
+        const newFolder = NoteItem.NewFolder(newFolderName, this, this.logger);
         if (parent) parent.addChild(newFolder);
         else this.data.push(newFolder);
         this.saveToConfig();
@@ -151,13 +156,13 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
             placeHolder: 'Note name'
         });
         if (!newNoteName) return;
-        const newNote = await NoteItem.NewNote(newNoteName, this, "# This is an empty note");
+        const newNote = await NoteItem.NewNote(newNoteName, this, encode("# This is an empty note"), this.logger);
         if (parent) parent.addChild(newNote);
         else this.data.push(newNote);
 
         this.saveToConfig();
 
-        newNote.openEditor(this.logger);
+        newNote.openEditor();
     }
 
 
@@ -169,14 +174,14 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
         switch (mode) {
             case folderSelectMode.selectToAddFolder:
-                rootFolders.push(NoteItem.NewTempNote('$(add)', this, 'add folder in root directory'));
+                rootFolders.push(NoteItem.NewTempNote('$(add)', this, this.logger, 'add folder in root directory'));
                 break;
             case folderSelectMode.selectToAddNote:
-                rootFolders.push(NoteItem.NewTempNote('$(add)', this, 'add note in root directory'));
+                rootFolders.push(NoteItem.NewTempNote('$(add)', this, this.logger, 'add note in root directory'));
                 break;
             case folderSelectMode.selectToMoveFolder:
             case folderSelectMode.selectToMoveNote:
-                rootFolders.push(NoteItem.NewTempNote('$(move)', this, 'move folder to root directory'));
+                rootFolders.push(NoteItem.NewTempNote('$(move)', this, this.logger, 'move folder to root directory'));
                 break;
             default:
                 break;
@@ -213,23 +218,23 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
             switch (mode) {
                 case folderSelectMode.selectToAddFolder:
-                    newOptions.push(NoteItem.NewTempNote('$(add)', this, 'add folder here'));
+                    newOptions.push(NoteItem.NewTempNote('$(add)', this, this.logger, 'add folder here'));
                     break;
                 case folderSelectMode.selectToAddNote:
-                    newOptions.push(NoteItem.NewTempNote('$(add)', this, 'add note here'));
+                    newOptions.push(NoteItem.NewTempNote('$(add)', this, this.logger, 'add note here'));
                     break;
                 case folderSelectMode.selectToMoveNote:
-                    newOptions.push(NoteItem.NewTempNote('$(move)', this, 'place note here'));
+                    newOptions.push(NoteItem.NewTempNote('$(move)', this, this.logger, 'place note here'));
                     break;
                 case folderSelectMode.selectToDelete:
-                    newOptions.push(NoteItem.NewTempNote("$(chrome-close)", this, 'delete this folder'));
+                    newOptions.push(NoteItem.NewTempNote("$(chrome-close)", this, this.logger, 'delete this folder'));
                     break;
                 default:
                     break;
             }
 
             if (newOptions.length == 0) {
-                this.logger.appendLine(`No more folders found.`);
+                this.log(`No more folders found.`);
                 return selected;
             }
 
@@ -290,20 +295,24 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
     saveToConfig(): void {
 
-        this.logger.appendLine('========= Saving to config...');
+        const asJSONstring = JSON.stringify(this.data, null, 2);
+        const reparsed = JSON.parse(asJSONstring);
 
-        // const json2 = this.data;
 
-        // const json = `[${this.data.map(item => item.getJson()).join(',')}]`;
+        if (this.debugMode) {
+            this.log('========= Saving to config =========');
+            this.log(asJSONstring);
+        }
+
         try {
-            // const json2 = JSON.parse(json);
-            if (this.debugMode) this.logger.appendLine(`${JSON.stringify(this.data, null, 4)}`);
             const config = vscode.workspace.getConfiguration('syncedNotes');
-            config.update('notes', this.data, vscode.ConfigurationTarget.Global);
+            config.update('notes', reparsed, vscode.ConfigurationTarget.Global);
         }
         catch (e) {
-            this.logger.appendLine(`Error parsing json to save: ${e}`);
+            this.log(`Error parsing json to save: ${e}`);
         }
+
+        this.log(`============== Done saving ==============`);
 
         this._onDidChangeTreeData.fire(undefined);
     }
