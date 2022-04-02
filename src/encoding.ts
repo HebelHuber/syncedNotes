@@ -7,8 +7,9 @@ import * as vscode from 'vscode';
 // }
 
 export function decode(b64: string, logger?: vscode.OutputChannel): string {
-    const result = lzutf8.decompress(b64, { inputEncoding: "Base64", outputEncoding: "String" }) as string;
-    return decodeURIComponent(result);
+    return lzutf8.decompress(b64, { inputEncoding: "Base64", outputEncoding: "String" }) as string;
+    // const result = lzutf8.decompress(b64, { inputEncoding: "Base64", outputEncoding: "String" }) as string;
+    // return decodeURIComponent(result);
 }
 
 // export async function encodeAsync(str: string, logger?: vscode.OutputChannel): Promise<string> {
@@ -19,7 +20,8 @@ export function decode(b64: string, logger?: vscode.OutputChannel): string {
 // }
 
 export function encode(str: string, logger?: vscode.OutputChannel): string {
-    const escaped = encodeURIComponent(str);
-    const result = lzutf8.compress(escaped, { outputEncoding: "Base64" }) as string;
-    return result;
+    return lzutf8.compress(str, { outputEncoding: "Base64" }) as string;
+    // const escaped = encodeURIComponent(str);
+    // const result = lzutf8.compress(escaped, { outputEncoding: "Base64" }) as string;
+    // return result;
 }

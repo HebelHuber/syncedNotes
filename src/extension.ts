@@ -46,8 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
     // X syncedNotes.deleteFolder
 
     const refreshNoteViewCommand = vscode.commands.registerCommand('syncedNotes.refreshNoteView', async () => {
-        provider.loadFromConfig();
-        // provider._onDidChangeTreeData.fire();
+        provider.loadFromConfig(true);
     });
 
     const addNoteCommand = vscode.commands.registerCommand('syncedNotes.addNote', async (selectedFolder?: NoteItem) => {

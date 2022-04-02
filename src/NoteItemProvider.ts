@@ -13,8 +13,8 @@ export enum folderSelectMode {
 
 export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
-    _onDidChangeTreeData: vscode.EventEmitter<NoteItem | void> = new vscode.EventEmitter<NoteItem | void>();
-    onDidChangeTreeData: vscode.Event<NoteItem | void> = this._onDidChangeTreeData.event;
+    _onDidChangeTreeData: vscode.EventEmitter<NoteItem | undefined> = new vscode.EventEmitter<NoteItem | undefined>();
+    onDidChangeTreeData: vscode.Event<NoteItem | undefined> = this._onDidChangeTreeData.event;
 
     data: NoteItem[] = [];
     logger: vscode.OutputChannel;
@@ -25,15 +25,17 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
     constructor(logger: vscode.OutputChannel, debugMode: boolean) {
         this.logger = logger;
         this.debugMode = debugMode;
-        this.loadFromConfig();
+        this.loadFromConfig(true);
     }
 
-    async loadFromConfig(): Promise<void> {
+    async loadFromConfig(triggerListRefresh: boolean): Promise<void> {
         if (this.debugMode) this.logger.appendLine('========= Loading from config...');
         const config = await vscode.workspace.getConfiguration('syncedNotes');
         this.debugMode = config.debugMode;
         this.data = this.getHierarchyRecursive(config.notes, new Array<NoteItem>());
-        // this._onDidChangeTreeData.fire();
+
+        if (triggerListRefresh)
+            this._onDidChangeTreeData.fire(undefined);
     }
 
     getHierarchyRecursive(obj: any[], rootNodesArray: Array<NoteItem>, parentNode?: NoteItem): NoteItem[] {
@@ -92,7 +94,7 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
     getChildren(element?: NoteItem | undefined): vscode.ProviderResult<NoteItem[]> {
         if (element === undefined) {
-            this.loadFromConfig();
+            this.loadFromConfig(false);
             return this.data;
         }
         return element.children;
@@ -301,7 +303,7 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
             this.logger.appendLine(`Error parsing json to save: ${e}`);
         }
 
-        this._onDidChangeTreeData.fire();
+        this._onDidChangeTreeData.fire(undefined);
 
     }
 }
