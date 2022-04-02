@@ -20,17 +20,6 @@ export function activate(context: vscode.ExtensionContext) {
     const provider = new NoteItemProvider(logger, debugMode)
     context.subscriptions.push(vscode.window.registerTreeDataProvider('syncednotes-explorer', provider));
 
-    // add in a subscription to workspace config changes
-    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
-        if (e.affectsConfiguration('syncedNotes')) {
-
-            // if (!vscode.workspace.getConfiguration('syncedNotes').autorefresh)
-            //     return;
-
-            // provider.loadFromConfig();
-        }
-    }));
-
     // X syncedNotes.refreshNoteView
 
     // X syncedNotes.addNote

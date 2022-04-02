@@ -128,17 +128,17 @@
 				{
 					"command": "syncedNotes.addNote",
 					"when": "view == syncednotes-explorer",
-					"group": "navigation"
-				},
-				{
-					"command": "syncedNotes.refreshNoteView",
-					"when": "view == syncednotes-explorer",
-					"group": "navigation"
+					"group": "navigation@100"
 				},
 				{
 					"command": "syncedNotes.addFolder",
 					"when": "view == syncednotes-explorer",
-					"group": "navigation"
+					"group": "navigation@200"
+				},
+				{
+					"command": "syncedNotes.refreshNoteView",
+					"when": "view == syncednotes-explorer",
+					"group": "navigation@300"
 				}
 			],
 			"view/item/context": [
@@ -256,11 +256,6 @@
 			{
 				"title": "Synced Notes",
 				"properties": {
-					"syncedNotes.autorefresh": {
-						"type": "boolean",
-						"default": true,
-						"description": "Automatically refresh the notes when the settings change"
-					},
 					"syncedNotes.debugMode": {
 						"type": "boolean",
 						"default": false
