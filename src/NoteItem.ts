@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { decodeAsync, encodeAsync, encode, decode } from './encoding';
+import { encode, decode } from './encoding';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
@@ -12,7 +12,7 @@ export class NoteItem extends vscode.TreeItem {
     iconPath?: string | vscode.Uri | { light: string | vscode.Uri; dark: string | vscode.Uri } | vscode.ThemeIcon | undefined;
 
     owner: NoteItemProvider;
-    content?: string | undefined;
+    contentEndcoded?: string | undefined;
     parent?: NoteItem | undefined;
     children?: NoteItem[] | undefined;
 
@@ -46,7 +46,7 @@ export class NoteItem extends vscode.TreeItem {
     private constructor(label: string, owner: NoteItemProvider, content?: string, children?: NoteItem[]) {
         super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Collapsed);
         this.children = children;
-        this.content = content;
+        this.contentEndcoded = content;
         this.owner = owner;
 
         if (children !== undefined)
@@ -186,7 +186,7 @@ export class NoteItem extends vscode.TreeItem {
 
         // I'm a leaf
         // this.owner.logger.appendLine(`${this.label} is a leaf`);
-        return `{"${this.label}" : "${this.content}"}`;
+        return `{"${this.label}" : "${this.contentEndcoded}"}`;
     }
 
     // getChildrenRecursive(includeNotes: boolean, includeFolders: boolean, includeEmptyFolders: boolean): NoteItem[] {
@@ -199,7 +199,7 @@ export class NoteItem extends vscode.TreeItem {
     // }
 
     async decodedContentAsync(truncateTo?: number): Promise<string> {
-        const decoded = await decodeAsync(this.content as string);
+        const decoded = await decode(this.contentEndcoded as string);
 
         if (truncateTo)
             return decoded.substr(0, truncateTo) + '...';
@@ -225,24 +225,26 @@ export class NoteItem extends vscode.TreeItem {
         });
     }
 
-    async openEditor(logger: vscode.OutputChannel): Promise<void> {
+    openEditor(logger: vscode.OutputChannel): void {
         logger.appendLine(`editing note ${this.label}`);
 
-        await this.writeToTempFile(logger).then(async uri => {
+        this.writeToTempFile(logger).then(async uri => {
             await vscode.commands.executeCommand('vscode.open', uri);
             // await vscode.commands.executeCommand('cursorBottom');
 
             const onSaveDisposable = vscode.workspace.onDidSaveTextDocument(async textDocument => {
                 if (textDocument.uri.fsPath === uri.fsPath) {
-                    await this.saveNote(textDocument, logger);
+                    this.saveNote(textDocument, logger);
                 }
             });
 
             const onCloseDisposable = vscode.workspace.onDidCloseTextDocument(async textDocument => {
                 if (textDocument.uri.fsPath === uri.fsPath) {
+
                     onSaveDisposable.dispose();
                     onCloseDisposable.dispose();
-                    await fs.unlink(uri.fsPath, (err) => {
+
+                    fs.unlink(uri.fsPath, (err) => {
                         if (err) logger.appendLine(`Error deleting file: ${uri.fsPath}, ${err}`);
                     });
                 }
@@ -250,10 +252,11 @@ export class NoteItem extends vscode.TreeItem {
         });
     }
 
-    async saveNote(textDocument: vscode.TextDocument, logger: vscode.OutputChannel): Promise<void> {
+    saveNote(textDocument: vscode.TextDocument, logger: vscode.OutputChannel): void {
         logger.appendLine(`saving note ${this.label}`);
-        const content = await textDocument.getText();
-        this.content = await encodeAsync(content, logger);
+        const content = textDocument.getText();
+        this.contentEndcoded = encode(content, logger);
+        logger.appendLine(`content: ${content} saved as ${this.contentEndcoded}`);
         this.owner.saveToConfig();
     }
 }

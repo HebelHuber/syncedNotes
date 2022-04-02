@@ -7,24 +7,29 @@ import { NoteItemProvider, folderSelectMode } from './NoteItemProvider';
 
 export function activate(context: vscode.ExtensionContext) {
 
+    const debugMode = vscode.workspace.getConfiguration('syncedNotes').debugMode as boolean;
+
     //Create output channel
     const logger = vscode.window.createOutputChannel("synced notes");
-    logger.show();
-    logger.appendLine("synced notes extension activated");
 
-    const provider = new NoteItemProvider(logger)
-    vscode.window.registerTreeDataProvider('syncednotes-explorer', provider)
+    if (debugMode) {
+        logger.show();
+        logger.appendLine("synced notes extension activated");
+    }
+
+    const provider = new NoteItemProvider(logger, debugMode)
+    context.subscriptions.push(vscode.window.registerTreeDataProvider('syncednotes-explorer', provider));
 
     // add in a subscription to workspace config changes
-    vscode.workspace.onDidChangeConfiguration(e => {
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
         if (e.affectsConfiguration('syncedNotes')) {
 
-            if (!vscode.workspace.getConfiguration('syncedNotes').autorefresh)
-                return;
+            // if (!vscode.workspace.getConfiguration('syncedNotes').autorefresh)
+            //     return;
 
-            provider.loadFromConfig();
+            // provider.loadFromConfig();
         }
-    });
+    }));
 
     // X syncedNotes.refreshNoteView
 
@@ -42,6 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     const refreshNoteViewCommand = vscode.commands.registerCommand('syncedNotes.refreshNoteView', async () => {
         provider.loadFromConfig();
+        // provider._onDidChangeTreeData.fire();
     });
 
     const addNoteCommand = vscode.commands.registerCommand('syncedNotes.addNote', async (selectedFolder?: NoteItem) => {

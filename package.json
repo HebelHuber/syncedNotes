@@ -37,8 +37,17 @@
 		"workspace"
 	],
 	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "syncednotes-explorer-container",
+					"title": "Synced Notes",
+					"icon": "$(notebook)"
+				}
+			]
+		},
 		"views": {
-			"explorer": [
+			"syncednotes-explorer-container": [
 				{
 					"id": "syncednotes-explorer",
 					"name": "Synced Notes",

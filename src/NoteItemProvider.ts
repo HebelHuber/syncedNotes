@@ -13,21 +13,30 @@ export enum folderSelectMode {
 
 export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
-    _onDidChangeTreeData: vscode.EventEmitter<NoteItem> = new vscode.EventEmitter<NoteItem>();
-    onDidChangeTreeData: vscode.Event<NoteItem> = this._onDidChangeTreeData.event;
+    _onDidChangeTreeData: vscode.EventEmitter<NoteItem | void> = new vscode.EventEmitter<NoteItem | void>();
+    onDidChangeTreeData: vscode.Event<NoteItem | void> = this._onDidChangeTreeData.event;
 
     data: NoteItem[] = [];
     logger: vscode.OutputChannel;
-    debugMode = false;
+    debugMode: boolean;
 
     public get rootNotes(): NoteItem[] { return this.data; };
 
-    constructor(logger: vscode.OutputChannel) {
+    constructor(logger: vscode.OutputChannel, debugMode: boolean) {
         this.logger = logger;
+        this.debugMode = debugMode;
         this.loadFromConfig();
     }
 
-    getHierarchyRecursive(obj: any[], rootNodesArray: Array<NoteItem>, parentNode?: NoteItem): Array<NoteItem> {
+    async loadFromConfig(): Promise<void> {
+        if (this.debugMode) this.logger.appendLine('========= Loading from config...');
+        const config = await vscode.workspace.getConfiguration('syncedNotes');
+        this.debugMode = config.debugMode;
+        this.data = this.getHierarchyRecursive(config.notes, new Array<NoteItem>());
+        // this._onDidChangeTreeData.fire();
+    }
+
+    getHierarchyRecursive(obj: any[], rootNodesArray: Array<NoteItem>, parentNode?: NoteItem): NoteItem[] {
 
         for (const value of Object.values(obj)) {
             Object.keys(value).forEach(key => {
@@ -35,15 +44,16 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
                 const name = key;
                 const content = value[key];
 
+                if (this.debugMode)
+                    this.logger.appendLine(`${name}: ${content}`);
+
                 if (Array.isArray(content)) {
                     const folderNode = NoteItem.NewFolder(name, this);
-                    // const folderNode = new NoteItem(name, this, undefined, []);
                     if (parentNode) parentNode.addChild(folderNode);
                     else rootNodesArray.push(folderNode);
                     rootNodesArray.concat(this.getHierarchyRecursive(content, rootNodesArray, folderNode));
                 } else {
                     const self = NoteItem.NewNote(name, this, content);
-                    // const self = new NoteItem(name, this, content, undefined);
                     if (parentNode) parentNode.addChild(self);
                     else rootNodesArray.push(self);
                 }
@@ -75,13 +85,6 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 	// public async handleDrag(source: NoteItem[], treeDataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
 	// 	treeDataTransfer.set('application/vnd.code.tree.testViewDragAndDrop', new vscode.DataTransferItem(source));
 	// }
-
-    async loadFromConfig(): Promise<void> {
-        if (this.debugMode) this.logger.appendLine('========= Loading from config...');
-        const config = await vscode.workspace.getConfiguration('syncedNotes');
-        this.debugMode = config.debugMode;
-        this.data = this.getHierarchyRecursive(config.notes, new Array<NoteItem>());
-    }
 
     getTreeItem(element: NoteItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
         return element;
@@ -150,7 +153,7 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
         if (parent) parent.addChild(newNote);
         else this.data.push(newNote);
 
-        await this.saveToConfig();
+        this.saveToConfig();
 
         newNote.openEditor(this.logger);
     }
@@ -283,23 +286,22 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
         return selected;
     }
 
-    async saveToConfig(logJson?: boolean): Promise<void> {
+    saveToConfig(): void {
 
-        await this.logger.appendLine('========= Saving to config...');
+        this.logger.appendLine('========= Saving to config...');
 
         const json = `[${this.data.map(item => item.getJson()).join(',')}]`;
-        // await this.logger.appendLine(json);
         try {
             const json2 = JSON.parse(json);
-
-            if (logJson) await this.logger.appendLine(`${JSON.stringify(json2, null, 4)}`);
-
-            const config = await vscode.workspace.getConfiguration('syncedNotes');
-            await config.update('notes', json2, vscode.ConfigurationTarget.Global);
+            if (this.debugMode) this.logger.appendLine(`${JSON.stringify(json2, null, 4)}`);
+            const config = vscode.workspace.getConfiguration('syncedNotes');
+            config.update('notes', json2, vscode.ConfigurationTarget.Global);
         }
         catch (e) {
-            await this.logger.appendLine(`Error parsing json: ${e}`);
+            this.logger.appendLine(`Error parsing json to save: ${e}`);
         }
+
+        this._onDidChangeTreeData.fire();
 
     }
 }
