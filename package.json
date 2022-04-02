@@ -5,7 +5,7 @@
 	"publisher": "HebelHuber",
 	"qna": "marketplace",
 	"homepage": "https://github.com/HebelHuber/syncedNotes",
-	"version": "1.4.0",
+	"version": "1.5.0",
 	"engines": {
 		"vscode": "^1.41.0"
 	},
@@ -282,8 +282,7 @@
 		"release": "standard-version",
 		"test:login": "./node_modules/.bin/vsce login HebelHuber"
 	},
-	"dependencies": {
-	},
+	"dependencies": {},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
 		"@types/mocha": "^5.2.7",
