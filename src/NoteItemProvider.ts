@@ -292,18 +292,19 @@ export class NoteItemProvider implements vscode.TreeDataProvider<NoteItem> {
 
         this.logger.appendLine('========= Saving to config...');
 
-        const json = `[${this.data.map(item => item.getJson()).join(',')}]`;
+        // const json2 = this.data;
+
+        // const json = `[${this.data.map(item => item.getJson()).join(',')}]`;
         try {
-            const json2 = JSON.parse(json);
-            if (this.debugMode) this.logger.appendLine(`${JSON.stringify(json2, null, 4)}`);
+            // const json2 = JSON.parse(json);
+            if (this.debugMode) this.logger.appendLine(`${JSON.stringify(this.data, null, 4)}`);
             const config = vscode.workspace.getConfiguration('syncedNotes');
-            config.update('notes', json2, vscode.ConfigurationTarget.Global);
+            config.update('notes', this.data, vscode.ConfigurationTarget.Global);
         }
         catch (e) {
             this.logger.appendLine(`Error parsing json to save: ${e}`);
         }
 
         this._onDidChangeTreeData.fire(undefined);
-
     }
 }

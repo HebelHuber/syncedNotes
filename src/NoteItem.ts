@@ -43,10 +43,10 @@ export class NoteItem extends vscode.TreeItem {
         return item;
     }
 
-    private constructor(label: string, owner: NoteItemProvider, content?: string, children?: NoteItem[]) {
+    private constructor(label: string, owner: NoteItemProvider, contentEncoded?: string, children?: NoteItem[]) {
         super(label, children === undefined ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Collapsed);
         this.children = children;
-        this.contentEndcoded = content;
+        this.contentEndcoded = contentEncoded;
         this.owner = owner;
 
         if (children !== undefined)
@@ -176,42 +176,35 @@ export class NoteItem extends vscode.TreeItem {
         return false;
     }
 
-    getJson(): string {
+    toJSON(): any {
+        const outObj: any = {};
 
         // I'm a folder
         if (this.isFolder) {
             // this.owner.logger.appendLine(`${this.label} is a folder`);
-            return `{"${this.label}":[${this.children?.map(child => child.getJson()).join(',')}]}`;
+            outObj[this.label as string] = this.children?.map(child => child.toJSON());
+            return outObj;
+            // return `{"${this.label}":[${this.children?.map(child => child.getJson()).join(',')}]}`;
         }
 
         // I'm a leaf
-        // this.owner.logger.appendLine(`${this.label} is a leaf`);
-        return `{"${this.label}" : "${this.contentEndcoded}"}`;
+        outObj[this.label as string] = this.contentEndcoded as string;
+        return outObj;
     }
 
-    // getChildrenRecursive(includeNotes: boolean, includeFolders: boolean, includeEmptyFolders: boolean): NoteItem[] {
-
-    //     let children = this.getChildren(includeNotes, includeFolders, includeEmptyFolders);
-    //     children.forEach(child => {
-    //         children = children.concat(child.getChildrenRecursive(includeNotes, includeFolders, includeEmptyFolders));
-    //     });
-    //     return children;
-    // }
-
-    async decodedContentAsync(truncateTo?: number): Promise<string> {
-        const decoded = await decode(this.contentEndcoded as string);
+    decodedContent(truncateTo?: number): string {
 
         if (truncateTo)
-            return decoded.substr(0, truncateTo) + '...';
+            return decode(this.contentEndcoded as string).substr(0, truncateTo) + '...';
 
-        return decoded
+        return decode(this.contentEndcoded as string);
     }
 
     async writeToTempFile(logger: vscode.OutputChannel): Promise<vscode.Uri> {
         const tempFilePath = path.join(os.tmpdir(), this.getTempFileName());
         logger.appendLine(`temp file: ${tempFilePath}`);
 
-        await fs.writeFile(tempFilePath, await this.decodedContentAsync(), (err) => {
+        await fs.writeFile(tempFilePath, this.decodedContent(), (err) => {
             if (err) logger.appendLine(`Error writing file: ${tempFilePath}, ${err}`);
         });
 
@@ -232,13 +225,13 @@ export class NoteItem extends vscode.TreeItem {
             await vscode.commands.executeCommand('vscode.open', uri);
             // await vscode.commands.executeCommand('cursorBottom');
 
-            const onSaveDisposable = vscode.workspace.onDidSaveTextDocument(async textDocument => {
+            const onSaveDisposable = vscode.workspace.onDidSaveTextDocument(textDocument => {
                 if (textDocument.uri.fsPath === uri.fsPath) {
-                    this.saveNote(textDocument, logger);
+                    this.saveNote(textDocument.getText(), logger);
                 }
             });
 
-            const onCloseDisposable = vscode.workspace.onDidCloseTextDocument(async textDocument => {
+            const onCloseDisposable = vscode.workspace.onDidCloseTextDocument(textDocument => {
                 if (textDocument.uri.fsPath === uri.fsPath) {
 
                     onSaveDisposable.dispose();
@@ -252,11 +245,11 @@ export class NoteItem extends vscode.TreeItem {
         });
     }
 
-    saveNote(textDocument: vscode.TextDocument, logger: vscode.OutputChannel): void {
-        logger.appendLine(`saving note ${this.label}`);
-        const content = textDocument.getText();
-        this.contentEndcoded = encode(content, logger);
-        logger.appendLine(`content: ${content} saved as ${this.contentEndcoded}`);
+    saveNote(content: string, logger: vscode.OutputChannel): void {
+        // logger.appendLine(`saving note: ${this.label}`);
+        // const content = text.getText();
+        this.contentEndcoded = encode(content);
+        logger.appendLine(`content of ${this.label}: "${content}" ===IS=NOW===> "${this.contentEndcoded}"`);
         this.owner.saveToConfig();
     }
 }
